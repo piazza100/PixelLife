@@ -15,7 +15,9 @@ export type RewardData = {totalXp:number;gradeCode:string;badges:RewardBadge[];p
 export type Member = {id:number;email:string;displayName:string;avatarUrl?:string;effectivePlan:'FREE'|'PLUS';activeBoardLimit:1|30;writableBoardId:number|null}
 
 let csrfToken=''
-const API_ORIGIN=(import.meta.env.VITE_API_BASE_URL||'').replace(/\/$/,'')
+// Web and API always share the browser origin. Vite proxies locally and
+// Cloudflare Pages Functions proxies deployed requests to Render.
+const API_ORIGIN=''
 export class ApiError extends Error { constructor(message:string,public status:number,public code?:string){super(message)} }
 async function ensureCsrf(){
   if(csrfToken)return csrfToken
