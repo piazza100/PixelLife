@@ -1,0 +1,2 @@
+-- The canonical schema is src/main/resources/db/migration.
+-- Run V1__create_core_tables.sql through Flyway against the selected Aiven database.

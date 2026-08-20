@@ -1,0 +1,70 @@
+# Secrets and machine-local environment files
+.env
+.env.*
+!.env.example
+!.env.production.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+secrets/
+credentials/
+credentials.json
+client_secret_*.json
+*-service-account.json
+application-secret.yml
+application-secret.yaml
+application-local-overrides.yml
+application-local-overrides.yaml
+
+# Java / Maven build output
+target/
+*.class
+*.jar
+*.war
+.mvn/timing.properties
+
+# Frontend dependencies and generated output
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+frontend/coverage/
+frontend/.vite/
+node_modules/
+dist/
+coverage/
+
+# Database exports and local backups (Flyway/source SQL stays tracked)
+*.sql.gz
+*.sql.zip
+*.dump
+*.bak
+backups/
+
+# Logs, caches, and temporary files
+*.log
+logs/
+tmp/
+temp/
+.cache/
+*.tmp
+*.swp
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE, OS, and local agent state
+.idea/
+.vscode/
+.codex/
+.agents/
+*.iml
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local planning and documentation
+*.md

@@ -1,0 +1,7 @@
+spring:
+  config:
+    import: optional:file:.env.local[.properties]
+
+billing:
+  polar:
+    api-base: ${POLAR_API_BASE:https://sandbox-api.polar.sh/v1}
