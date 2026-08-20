@@ -1,0 +1,6 @@
+# Only backend build inputs are sent to the Docker builder.
+# Local secrets, frontend files, docs, and generated outputs stay outside.
+**
+!pom.xml
+!src
+!src/**
