@@ -51,6 +51,20 @@ class BillingServiceTest {
     }
 
     @Test
+    void keepsPlusUntilPeriodEndWhenCancellationIsScheduled() throws Exception {
+        Instant now = Instant.now();
+        byte[] payload = payload("subscription.updated", "active", now);
+        String webhookId = "evt_cancel_scheduled";
+        String timestamp = String.valueOf(now.getEpochSecond());
+        when(mapper.claimBillingWebhook(eq(webhookId), eq("subscription.updated"), any())).thenReturn(1);
+
+        billing.handleWebhook(payload, webhookId, timestamp, sign(webhookId, timestamp, payload));
+
+        verify(mapper).activatePolarSubscription(eq(42L), eq("cus_1"), eq("sub_1"), any(LocalDateTime.class), any(LocalDateTime.class));
+        verify(mapper, never()).revokePolarSubscription(anyLong(), anyString(), anyString(), any());
+    }
+
+    @Test
     void rejectsTamperedWebhook() {
         Instant now = Instant.now();
         byte[] payload = "{}".getBytes(StandardCharsets.UTF_8);

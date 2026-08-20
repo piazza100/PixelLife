@@ -1,0 +1,15 @@
+app:
+  cors:
+    allowed-origin: ${FRONTEND_ORIGIN}
+  frontend-url: ${FRONTEND_URL}
+
+billing:
+  polar:
+    api-base: ${POLAR_API_BASE:https://sandbox-api.polar.sh/v1}
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+        same-site: none

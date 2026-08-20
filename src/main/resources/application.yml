@@ -24,6 +24,7 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
             scope: openid,profile,email
+            redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:5173/login/oauth2/code/google}
 mybatis:
   mapper-locations: classpath:/mappers/**/*.xml
   type-aliases-package: com.pixellife.domain
