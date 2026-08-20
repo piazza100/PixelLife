@@ -129,12 +129,33 @@ public class PixelLifeService {
     public Map<String, Object> fillTestEntries(long userId, long boardId, int days) {
         if (days < 1 || days > 365) throw new IllegalArgumentException("Test days must be between 1 and 365");
         BoardRow board = requireBoard(userId, boardId);
-        if (!"ACTIVE".equals(board.getStatus())) throw new IllegalStateException("Finished boards are read-only");
-        requireWritable(userId, boardId);
         LocalDate first = LocalDate.now().minusDays(days - 1L);
         if (first.isBefore(board.getStartDate())) first = board.getStartDate();
+        return fillTestEntries(userId, boardId, first, LocalDate.now());
+    }
+
+    public List<Map<String, Object>> testBoards(long userId) {
+        return mapper.findBoards(userId).stream().map(board -> {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", board.getId()); item.put("name", board.getName());
+            item.put("type", board.getBoardType()); item.put("status", board.getStatus());
+            item.put("startDate", board.getStartDate()); item.put("endDate", board.getEndedAt());
+            return item;
+        }).toList();
+    }
+
+    @Transactional
+    public Map<String, Object> fillTestEntries(long userId, long boardId, LocalDate first, LocalDate last) {
+        BoardRow board = requireBoard(userId, boardId);
+        if (!"ACTIVE".equals(board.getStatus())) throw new IllegalStateException("Finished boards are read-only");
+        requireWritable(userId, boardId);
+        if (first == null || last == null || first.isAfter(last)) throw new IllegalArgumentException("Invalid test date range");
+        if (first.isBefore(board.getStartDate())) throw new IllegalArgumentException("Test date is before the board start date");
+        if (last.isAfter(LocalDate.now())) throw new IllegalArgumentException("Future test entries are not allowed");
+        if (board.getEndedAt() != null && last.isAfter(board.getEndedAt())) throw new IllegalArgumentException("Test date is after the board end date");
+        if (java.time.temporal.ChronoUnit.DAYS.between(first, last) >= 365) throw new IllegalArgumentException("Test range must be 365 days or less");
         int saved = 0;
-        for (LocalDate date = first; !date.isAfter(LocalDate.now()); date = date.plusDays(1)) {
+        for (LocalDate date = first; !date.isAfter(last); date = date.plusDays(1)) {
             Integer value = "LEVEL".equals(board.getBoardType()) ? (saved % 5) + 1 : null;
             Boolean success = "CHECK".equals(board.getBoardType()) ? Boolean.TRUE : null;
             String emoji = "MOOD".equals(board.getBoardType()) ? List.of("😄", "😊", "😐", "😔", "😴").get(saved % 5) : null;
@@ -142,7 +163,7 @@ public class PixelLifeService {
             saved++;
         }
         mapper.touchBoard(boardId);
-        return Map.of("saved", saved, "from", first, "to", LocalDate.now());
+        return Map.of("saved", saved, "from", first, "to", last, "type", board.getBoardType());
     }
 
     @Transactional
@@ -151,8 +172,7 @@ public class PixelLifeService {
         BoardRow board = requireBoard(userId, boardId);
         if (!"ACTIVE".equals(board.getStatus())) throw new IllegalStateException("Board is already complete");
         requireWritable(userId, boardId);
-        LocalDate createdDate = board.getCreatedAt().toLocalDate();
-        LocalDate rewardDate = createdDate.plusDays(6);
+        LocalDate rewardDate = board.getStartDate().plusDays(6);
         LocalDate targetDate = board.getGoalDays() == null ? rewardDate : board.getStartDate().plusDays(board.getGoalDays() - 1L);
         LocalDate eligibleDate = targetDate.isAfter(rewardDate) ? targetDate : rewardDate;
         if (LocalDate.now().isBefore(eligibleDate)) throw new IllegalStateException("This board can finish on " + eligibleDate);

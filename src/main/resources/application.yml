@@ -40,6 +40,8 @@ app:
   cors.allowed-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
   rate-limit.requests-per-minute: ${API_RATE_LIMIT_PER_MINUTE:120}
+  testing:
+    allowed-emails: ${TEST_USER_EMAILS:}
 billing:
   polar:
     access-token: ${POLAR_ACCESS_TOKEN:}

@@ -52,6 +52,18 @@ class PixelLifeServiceTest {
     }
 
     @Test
+    void finishDateUsesBoardStartInsteadOfCreatedTime() {
+        BoardRow board = board(LocalDate.now(), LocalDateTime.now().minusDays(30), null);
+        when(mapper.findBoard(10L, 1L)).thenReturn(board);
+
+        assertThatThrownBy(() -> service.complete(1L, 10L))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining(LocalDate.now().plusDays(6).toString());
+
+        verify(mapper, never()).completeBoard(anyLong(), anyLong(), anyInt(), anyInt());
+    }
+
+    @Test
     void duplicateCompletionNeverAwardsXpTwice() {
         BoardRow board = board(LocalDate.now().minusDays(10), LocalDateTime.now().minusDays(10), 7);
         when(mapper.findBoard(10L, 1L)).thenReturn(board);
@@ -105,7 +117,7 @@ class PixelLifeServiceTest {
     }
 
     @Test
-    void fillsPastDatesOnlyForLocalOrStagingTestControllerUse() {
+    void fillsPastDatesForAllowedManualTestUse() {
         BoardRow board = board(LocalDate.now().minusDays(9), LocalDateTime.now().minusDays(9), 30);
         when(mapper.findBoard(10L, 1L)).thenReturn(board);
 
@@ -114,6 +126,20 @@ class PixelLifeServiceTest {
         verify(mapper, times(7)).upsertEntry(eq(10L), any(LocalDate.class), anyInt(), isNull(), isNull(), anyString());
         verify(mapper).touchBoard(10L);
         org.assertj.core.api.Assertions.assertThat(result.get("saved")).isEqualTo(7);
+    }
+
+    @Test
+    void fillsOneSpecificDateUsingTheBoardType() {
+        LocalDate date = LocalDate.now().minusDays(2);
+        BoardRow board = board(LocalDate.now().minusDays(9), LocalDateTime.now().minusDays(9), 30);
+        board.setBoardType("CHECK");
+        when(mapper.findBoard(10L, 1L)).thenReturn(board);
+
+        Map<String, Object> result = service.fillTestEntries(1L, 10L, date, date);
+
+        verify(mapper).upsertEntry(10L, date, null, true, null, "Test day 1");
+        org.assertj.core.api.Assertions.assertThat(result.get("saved")).isEqualTo(1);
+        org.assertj.core.api.Assertions.assertThat(result.get("type")).isEqualTo("CHECK");
     }
 
     private BoardRow board(LocalDate start, LocalDateTime created, Integer goalDays) {
