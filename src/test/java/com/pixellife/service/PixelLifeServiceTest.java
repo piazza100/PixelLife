@@ -116,6 +116,17 @@ class PixelLifeServiceTest {
     }
 
     @Test
+    void checkBoardPersistsAnExplicitNoValue() {
+        BoardRow board = board(LocalDate.now().minusDays(2), LocalDateTime.now().minusDays(2), 30);
+        board.setBoardType("CHECK");
+        when(mapper.findBoard(10L, 1L)).thenReturn(board);
+
+        service.saveEntry(1L, 10L, LocalDate.now(), null, false, null, null);
+
+        verify(mapper).upsertEntry(10L, LocalDate.now(), null, false, null, null);
+    }
+
+    @Test
     void deletesOnlyAnActiveWritableBoard() {
         BoardRow board = board(LocalDate.now(), LocalDateTime.now(), 30);
         when(mapper.findBoard(10L, 1L)).thenReturn(board);
