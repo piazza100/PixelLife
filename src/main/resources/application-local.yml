@@ -2,6 +2,10 @@ spring:
   config:
     import: optional:file:.env.local[.properties]
 
+app:
+  testing:
+    allowed-emails: ${TEST_USER_EMAILS:}
+
 billing:
   polar:
     api-base: ${POLAR_API_BASE:https://sandbox-api.polar.sh/v1}

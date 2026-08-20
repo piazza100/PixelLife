@@ -22,13 +22,19 @@ public class PixelLifeService {
     @Transactional
     public long ensureMember(String subject, String email, String displayName, String avatarUrl, String locale) {
         if (subject == null || subject.isBlank()) throw new IllegalArgumentException("Invalid login");
-        Long id = mapper.findMemberId("GOOGLE", subject);
         Map<String,Object> member = new HashMap<>();
-        member.put("id", id); member.put("provider", "GOOGLE"); member.put("subject", subject);
+        member.put("provider", "GOOGLE"); member.put("subject", subject);
         member.put("email", email); member.put("displayName", displayName); member.put("avatarUrl", avatarUrl); member.put("locale", safeLocale(locale));
-        if (id == null) { mapper.insertMember(member); id = ((Number) member.get("id")).longValue(); }
-        else mapper.updateMember(member);
-        mapper.recordVisit(id, LocalDate.now()); refreshRewards(id); return id;
+        mapper.insertMember(member);
+        long id = ((Number) member.get("id")).longValue();
+        mapper.recordVisit(id, LocalDate.now());
+        return id;
+    }
+
+    public long memberId(String subject) {
+        Long id = mapper.findMemberId("GOOGLE", subject);
+        if (id == null) throw new NoSuchElementException("Account not found");
+        return id;
     }
 
     public Map<String,Object> member(long userId) {
@@ -48,11 +54,12 @@ public class PixelLifeService {
     }
 
     public Map<String, Object> bootstrap(long userId) {
-        return Map.of("boards", mapper.findBoards(userId), "rewards", rewards(userId));
+        return Map.of("boards", mapper.findBoards(userId), "entries", mapper.findEntriesForUser(userId), "rewards", rewards(userId));
     }
 
     @Transactional
     public BoardRow createBoard(long userId, String name, String type, LocalDate startDate, Integer goalDays) {
+        mapper.lockMember(userId);
         Map<String,Object> account = mapper.findMember(userId);
         int limit = isPlus(account) ? 30 : 1;
         if (mapper.countActiveBoards(userId) >= limit) throw new IllegalStateException("Your plan allows " + limit + " active board" + (limit == 1 ? "" : "s"));
@@ -94,7 +101,6 @@ public class PixelLifeService {
         if (note != null && note.length() > 280) throw new IllegalArgumentException("Note is too long");
         mapper.upsertEntry(boardId, date, value, success, emoji, note == null || note.isBlank() ? null : note.trim());
         mapper.touchBoard(boardId);
-        refreshRewards(userId);
     }
 
     @Transactional
@@ -105,18 +111,52 @@ public class PixelLifeService {
         mapper.deleteEntry(boardId, date);
     }
 
+    @Transactional
+    public void deleteBoard(long userId, long boardId) {
+        mapper.lockMember(userId);
+        BoardRow board = requireBoard(userId, boardId);
+        if (!"ACTIVE".equals(board.getStatus())) throw new IllegalStateException("Completed boards cannot be deleted");
+        requireWritable(userId, boardId);
+        if (mapper.deleteActiveBoard(boardId, userId) != 1) throw new IllegalStateException("Board could not be deleted");
+    }
+
     public Map<String, Object> board(long userId, long boardId) {
         BoardRow board = requireBoard(userId, boardId);
         return Map.of("board", board, "entries", mapper.findEntries(boardId));
     }
 
     @Transactional
+    public Map<String, Object> fillTestEntries(long userId, long boardId, int days) {
+        if (days < 1 || days > 365) throw new IllegalArgumentException("Test days must be between 1 and 365");
+        BoardRow board = requireBoard(userId, boardId);
+        if (!"ACTIVE".equals(board.getStatus())) throw new IllegalStateException("Finished boards are read-only");
+        requireWritable(userId, boardId);
+        LocalDate first = LocalDate.now().minusDays(days - 1L);
+        if (first.isBefore(board.getStartDate())) first = board.getStartDate();
+        int saved = 0;
+        for (LocalDate date = first; !date.isAfter(LocalDate.now()); date = date.plusDays(1)) {
+            Integer value = "LEVEL".equals(board.getBoardType()) ? (saved % 5) + 1 : null;
+            Boolean success = "CHECK".equals(board.getBoardType()) ? Boolean.TRUE : null;
+            String emoji = "MOOD".equals(board.getBoardType()) ? List.of("😄", "😊", "😐", "😔", "😴").get(saved % 5) : null;
+            mapper.upsertEntry(boardId, date, value, success, emoji, "Test day " + (saved + 1));
+            saved++;
+        }
+        mapper.touchBoard(boardId);
+        return Map.of("saved", saved, "from", first, "to", LocalDate.now());
+    }
+
+    @Transactional
     public Map<String, Object> complete(long userId, long boardId) {
+        mapper.lockMember(userId);
         BoardRow board = requireBoard(userId, boardId);
         if (!"ACTIVE".equals(board.getStatus())) throw new IllegalStateException("Board is already complete");
         requireWritable(userId, boardId);
+        LocalDate createdDate = board.getCreatedAt().toLocalDate();
+        LocalDate rewardDate = createdDate.plusDays(6);
+        LocalDate targetDate = board.getGoalDays() == null ? rewardDate : board.getStartDate().plusDays(board.getGoalDays() - 1L);
+        LocalDate eligibleDate = targetDate.isAfter(rewardDate) ? targetDate : rewardDate;
+        if (LocalDate.now().isBefore(eligibleDate)) throw new IllegalStateException("This board can finish on " + eligibleDate);
         int elapsed = (int) (LocalDate.now().toEpochDay() - board.getStartDate().toEpochDay()) + 1;
-        if (board.getGoalDays() == null && elapsed < 7) throw new IllegalStateException("Endless boards need at least 7 days before completion");
         int goal = board.getGoalDays() == null ? elapsed : board.getGoalDays();
         BoardScoringService.Score result = scoring.score(goal, mapper.countEntries(boardId), mapper.countNotes(boardId));
         if (mapper.completeBoard(boardId, userId, result.points(), result.xp()) != 1) throw new IllegalStateException("Board could not be completed");
@@ -132,7 +172,9 @@ public class PixelLifeService {
         return Map.of("score", result.points(), "xp", result.xp(), "grade", grade, "species", plantSpecies, "color", plantColor);
     }
 
+    @Transactional
     public Map<String, Object> rewards(long userId) {
+        refreshRewards(userId);
         Map<String, Object> progress = new HashMap<>(mapper.findProgress(userId));
         progress.put("badges", badgeProgress(userId)); progress.put("plants", mapper.findPlants(userId));
         String grade=String.valueOf(progress.get("gradeCode"));List<Map<String,Object>> pool=mapper.findSpeciesPool(poolLimit(grade));int total=pool.stream().mapToInt(v->number(v.get("weightValue"))).sum();

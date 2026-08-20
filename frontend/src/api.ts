@@ -1,6 +1,6 @@
 export type ApiBoard = {
   id:number; name:string; boardType:'LEVEL'|'CHECK'|'MOOD'; color:string; startDate:string;
-  goalDays:number|null; endedAt:string|null; status:'ACTIVE'|'COMPLETED'; finalScore:number|null; xpAwarded:number
+  goalDays:number|null; endedAt:string|null; status:'ACTIVE'|'COMPLETED'; finalScore:number|null; xpAwarded:number; createdAt:string
 }
 export type ApiEntry = {entryDate:string;numericValue:number|null;success:boolean|null;emoji:string|null;note:string|null}
 export type BoardDetail = {board:ApiBoard;entries:ApiEntry[]}
@@ -19,9 +19,12 @@ let csrfToken=''
 // Cloudflare Pages Functions proxies deployed requests to Render.
 const API_ORIGIN=''
 export class ApiError extends Error { constructor(message:string,public status:number,public code?:string){super(message)} }
+const timeoutSignal=()=>AbortSignal.timeout(15_000)
 async function ensureCsrf(){
   if(csrfToken)return csrfToken
-  const response=await fetch(`${API_ORIGIN}/api/csrf`,{credentials:'include'})
+  let response:Response
+  try{response=await fetch(`${API_ORIGIN}/api/csrf`,{credentials:'include',signal:timeoutSignal()})}
+  catch(error){throw new ApiError(error instanceof DOMException&&error.name==='TimeoutError'?'Request timed out':'Could not reach the API',0,error instanceof DOMException&&error.name==='TimeoutError'?'TIMEOUT':'NETWORK')}
   if(!response.ok)throw new Error('Sign in first')
   csrfToken=(await response.json()).token
   return csrfToken
@@ -30,19 +33,23 @@ async function ensureCsrf(){
 async function request<T>(path:string,init?:RequestInit):Promise<T>{
   const method=(init?.method||'GET').toUpperCase()
   const token=['POST','PUT','PATCH','DELETE'].includes(method)?await ensureCsrf():''
-  const response=await fetch(`${API_ORIGIN}/api${path}`,{...init,credentials:'include',headers:{'Content-Type':'application/json',...(token?{'X-XSRF-TOKEN':token}:{}),...init?.headers}})
+  let response:Response
+  try{response=await fetch(`${API_ORIGIN}/api${path}`,{...init,signal:init?.signal||timeoutSignal(),credentials:'include',headers:{'Content-Type':'application/json',...(token?{'X-XSRF-TOKEN':token}:{}),...init?.headers}})}
+  catch(error){throw new ApiError(error instanceof DOMException&&error.name==='TimeoutError'?'Request timed out':'Could not reach the API',0,error instanceof DOMException&&error.name==='TimeoutError'?'TIMEOUT':'NETWORK')}
   if(!response.ok){const error=await response.json().catch(()=>({message:'Request failed'}));if(response.status===401)csrfToken='';throw new ApiError(error.message||'Request failed',response.status,error.code)}
+  if(response.status!==204&&!response.headers.get('content-type')?.includes('application/json'))throw new ApiError('The API returned a non-JSON response',502,'INVALID_RESPONSE')
   return response.status===204?undefined as T:response.json()
 }
 
 export const pixelLifeApi={
   me:(locale='en')=>request<Member>(`/me?locale=${locale}`),
-  bootstrap:(locale='en')=>request<{boards:ApiBoard[];rewards:RewardData}>(`/bootstrap?locale=${locale}`),
+  bootstrap:(locale='en')=>request<{boards:ApiBoard[];entries:Array<ApiEntry&{boardId:number}>;rewards:RewardData}>(`/bootstrap?locale=${locale}`),
   createBoard:(body:{name:string;type:'LEVEL'|'CHECK'|'MOOD';startDate:string;goalDays:number|null})=>request<ApiBoard>('/boards',{method:'POST',body:JSON.stringify(body)}),
   importGuestBoard:(body:{name:string;type:'LEVEL'|'CHECK'|'MOOD';startDate:string;goalDays:number|null;entries:Array<{date:string;value?:number;success?:boolean;emoji?:string;note?:string}>})=>request<ApiBoard>('/boards/import',{method:'POST',body:JSON.stringify(body)}),
   getBoard:(id:number)=>request<BoardDetail>(`/boards/${id}`),
   saveEntry:(id:number,date:string,body:{value?:number;success?:boolean;emoji?:string;note?:string})=>request<void>(`/boards/${id}/entries/${date}`,{method:'PUT',body:JSON.stringify(body)}),
   resetToday:(id:number,date:string)=>request<void>(`/boards/${id}/entries/${date}`,{method:'DELETE'}),
+  deleteBoard:(id:number)=>request<void>(`/boards/${id}`,{method:'DELETE'}),
   completeBoard:(id:number)=>request<{score:number;xp:number;grade:string;species:unknown;color:unknown}>(`/boards/${id}/complete`,{method:'POST'}),
   rewards:()=>request<RewardData>('/rewards')
   ,createPlusCheckout:()=>request<{url:string}>('/billing/checkout',{method:'POST'})

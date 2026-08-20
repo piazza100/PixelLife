@@ -16,6 +16,7 @@ public class BoardRow {
     private LocalDateTime completedAt;
     private Integer finalScore;
     private Integer xpAwarded;
+    private LocalDateTime createdAt;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -41,4 +42,6 @@ public class BoardRow {
     public void setFinalScore(Integer finalScore) { this.finalScore = finalScore; }
     public Integer getXpAwarded() { return xpAwarded; }
     public void setXpAwarded(Integer xpAwarded) { this.xpAwarded = xpAwarded; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

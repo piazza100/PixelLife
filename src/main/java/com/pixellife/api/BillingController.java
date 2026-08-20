@@ -28,13 +28,13 @@ public class BillingController {
 
     @PostMapping("/checkout")
     public Map<String,String> checkout(@AuthenticationPrincipal OidcUser user, HttpServletRequest request) {
-        long userId = pixelLife.ensureMember(user.getSubject(), user.getEmail(), user.getFullName(), user.getPicture(), "en");
+        long userId = pixelLife.memberId(user.getSubject());
         return Map.of("url", billing.createPlusCheckout(userId, user.getEmail(), request.getRemoteAddr()));
     }
 
     @PostMapping("/portal")
     public Map<String,String> portal(@AuthenticationPrincipal OidcUser user) {
-        long userId = pixelLife.ensureMember(user.getSubject(), user.getEmail(), user.getFullName(), user.getPicture(), "en");
+        long userId = pixelLife.memberId(user.getSubject());
         return Map.of("url", billing.createCustomerPortal(userId));
     }
 

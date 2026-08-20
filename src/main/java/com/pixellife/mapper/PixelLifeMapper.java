@@ -13,9 +13,12 @@ public interface PixelLifeMapper {
     @Select("SELECT id FROM users WHERE auth_provider=#{provider} AND provider_subject=#{subject}")
     Long findMemberId(String provider, String subject);
 
-    @Insert("INSERT INTO users(email,display_name,avatar_url,auth_provider,provider_subject,plan,locale) VALUES(#{email},#{displayName},#{avatarUrl},#{provider},#{subject},'FREE',#{locale})")
+    @Insert("INSERT INTO users(email,display_name,avatar_url,auth_provider,provider_subject,plan,locale) VALUES(#{email},#{displayName},#{avatarUrl},#{provider},#{subject},'FREE',#{locale}) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id),email=VALUES(email),display_name=VALUES(display_name),avatar_url=VALUES(avatar_url),locale=VALUES(locale)")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertMember(Map<String, Object> member);
+
+    @Select("SELECT id FROM users WHERE id=#{userId} FOR UPDATE")
+    Long lockMember(Long userId);
 
     @Update("UPDATE users SET email=#{email},display_name=#{displayName},avatar_url=#{avatarUrl},locale=#{locale} WHERE id=#{id}")
     void updateMember(Map<String, Object> member);
@@ -47,10 +50,10 @@ public interface PixelLifeMapper {
     @Insert("INSERT IGNORE INTO daily_visits(user_id, visit_date) VALUES(#{userId}, #{date})")
     void recordVisit(Long userId, LocalDate date);
 
-    @Select("SELECT id,user_id,name,board_type,color,start_date,goal_days,status,ended_at,completed_at,final_score,xp_awarded FROM boards WHERE user_id=#{userId} ORDER BY created_at DESC, id DESC")
+    @Select("SELECT id,user_id,name,board_type,color,start_date,goal_days,status,ended_at,completed_at,final_score,xp_awarded,created_at FROM boards WHERE user_id=#{userId} ORDER BY created_at DESC, id DESC")
     List<BoardRow> findBoards(Long userId);
 
-    @Select("SELECT id,user_id,name,board_type,color,start_date,goal_days,status,ended_at,completed_at,final_score,xp_awarded FROM boards WHERE id=#{id} AND user_id=#{userId}")
+    @Select("SELECT id,user_id,name,board_type,color,start_date,goal_days,status,ended_at,completed_at,final_score,xp_awarded,created_at FROM boards WHERE id=#{id} AND user_id=#{userId}")
     BoardRow findBoard(Long id, Long userId);
 
     @Insert("INSERT INTO boards(user_id,name,board_type,color,start_date,goal_days,ended_at,status) VALUES(#{userId},#{name},#{boardType},#{color},#{startDate},#{goalDays},#{endedAt},'ACTIVE')")
@@ -63,11 +66,17 @@ public interface PixelLifeMapper {
     @Update("UPDATE boards SET last_recorded_at=CURRENT_TIMESTAMP WHERE id=#{boardId}")
     void touchBoard(Long boardId);
 
+    @Delete("DELETE FROM boards WHERE id=#{boardId} AND user_id=#{userId} AND status='ACTIVE'")
+    int deleteActiveBoard(Long boardId, Long userId);
+
     @Delete("DELETE FROM pixel_entries WHERE board_id=#{boardId} AND entry_date=#{date}")
     int deleteEntry(Long boardId, LocalDate date);
 
     @Select("SELECT entry_date AS entryDate,numeric_value AS numericValue,success,emoji,note FROM pixel_entries WHERE board_id=#{boardId} ORDER BY entry_date")
     List<Map<String, Object>> findEntries(Long boardId);
+
+    @Select("SELECT e.board_id AS boardId,e.entry_date AS entryDate,e.numeric_value AS numericValue,e.success,e.emoji,e.note FROM pixel_entries e JOIN boards b ON b.id=e.board_id WHERE b.user_id=#{userId} ORDER BY e.board_id,e.entry_date")
+    List<Map<String, Object>> findEntriesForUser(Long userId);
 
     @Select("SELECT COUNT(*) FROM pixel_entries WHERE board_id=#{boardId}")
     int countEntries(Long boardId);

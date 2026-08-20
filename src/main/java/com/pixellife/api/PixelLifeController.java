@@ -22,7 +22,7 @@ public class PixelLifeController {
 
     @GetMapping("/bootstrap")
     public Map<String, Object> bootstrap(@AuthenticationPrincipal OidcUser user, @RequestParam(defaultValue="en") String locale) {
-        return service.bootstrap(memberId(user, locale));
+        return service.bootstrap(service.memberId(user.getSubject()));
     }
 
     @GetMapping("/me")
@@ -33,34 +33,37 @@ public class PixelLifeController {
 
     @PostMapping("/boards") @ResponseStatus(HttpStatus.CREATED)
     public BoardRow create(@AuthenticationPrincipal OidcUser user, @Valid @RequestBody CreateBoard request) {
-        return service.createBoard(memberId(user, "en"), request.name(), request.type(), request.startDate(), request.goalDays());
+        return service.createBoard(service.memberId(user.getSubject()), request.name(), request.type(), request.startDate(), request.goalDays());
     }
 
     @PostMapping("/boards/import") @ResponseStatus(HttpStatus.CREATED)
     public BoardRow importGuestBoard(@AuthenticationPrincipal OidcUser user, @Valid @RequestBody ImportBoard request) {
-        return service.importGuestBoard(memberId(user, "en"), request.name(), request.type(), request.startDate(), request.goalDays(),
+        return service.importGuestBoard(service.memberId(user.getSubject()), request.name(), request.type(), request.startDate(), request.goalDays(),
             request.entries().stream().map(entry -> new PixelLifeService.GuestEntry(entry.date(), entry.value(), entry.success(), entry.emoji(), entry.note())).toList());
     }
 
     @GetMapping("/boards/{boardId}")
-    public Map<String,Object> board(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId) { return service.board(memberId(user,"en"), boardId); }
+    public Map<String,Object> board(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId) { return service.board(service.memberId(user.getSubject()), boardId); }
 
     @PutMapping("/boards/{boardId}/entries/{date}") @ResponseStatus(HttpStatus.NO_CONTENT)
     public void saveEntry(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId, @PathVariable LocalDate date, @Valid @RequestBody SaveEntry request) {
-        service.saveEntry(memberId(user,"en"), boardId, date, request.value(), request.success(), request.emoji(), request.note());
+        service.saveEntry(service.memberId(user.getSubject()), boardId, date, request.value(), request.success(), request.emoji(), request.note());
     }
 
     @DeleteMapping("/boards/{boardId}/entries/{date}") @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void resetEntry(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId, @PathVariable LocalDate date) { service.deleteEntry(memberId(user,"en"), boardId, date); }
+    public void resetEntry(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId, @PathVariable LocalDate date) { service.deleteEntry(service.memberId(user.getSubject()), boardId, date); }
+
+    @DeleteMapping("/boards/{boardId}") @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteBoard(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId) { service.deleteBoard(service.memberId(user.getSubject()), boardId); }
 
     @PostMapping("/boards/{boardId}/complete")
-    public Map<String,Object> complete(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId) { return service.complete(memberId(user,"en"), boardId); }
+    public Map<String,Object> complete(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId) { return service.complete(service.memberId(user.getSubject()), boardId); }
 
     @GetMapping("/rewards")
-    public Map<String,Object> rewards(@AuthenticationPrincipal OidcUser user) { return service.rewards(memberId(user,"en")); }
+    public Map<String,Object> rewards(@AuthenticationPrincipal OidcUser user) { return service.rewards(service.memberId(user.getSubject())); }
 
     @DeleteMapping("/me") @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteAccount(@AuthenticationPrincipal OidcUser user) { service.deleteAccount(memberId(user,"en")); }
+    public void deleteAccount(@AuthenticationPrincipal OidcUser user) { service.deleteAccount(service.memberId(user.getSubject())); }
 
     private long memberId(OidcUser user, String locale) {
         return service.ensureMember(user.getSubject(), user.getEmail(), user.getFullName(), user.getPicture(), locale);

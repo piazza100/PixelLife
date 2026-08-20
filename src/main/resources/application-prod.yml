@@ -5,7 +5,8 @@ app:
 
 billing:
   polar:
-    api-base: ${POLAR_API_BASE:https://api.polar.sh/v1}
+    # Launch mode: production web/API with Polar Sandbox. Change Render env values together before real sales.
+    api-base: ${POLAR_API_BASE:https://sandbox-api.polar.sh/v1}
 
 server:
   servlet:

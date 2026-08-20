@@ -1,4 +1,6 @@
 app:
+  testing:
+    allowed-emails: ${TEST_USER_EMAILS:}
   cors:
     allowed-origin: ${FRONTEND_ORIGIN}
   frontend-url: ${FRONTEND_URL}
