@@ -69,9 +69,9 @@ public class PixelLifeController {
         return service.ensureMember(user.getSubject(), user.getEmail(), user.getFullName(), user.getPicture(), locale);
     }
 
-    public record CreateBoard(@NotBlank @Size(max=80) String name, @NotBlank String type, LocalDate startDate, @Min(1) @Max(3650) Integer goalDays) {}
+    public record CreateBoard(@NotBlank @Size(max=80) String name, @NotBlank String type, LocalDate startDate, @Min(3) @Max(3650) Integer goalDays) {}
     public record ImportBoard(@NotBlank @Size(max=80) String name, @NotBlank String type, @NotNull LocalDate startDate,
-                              @Min(1) @Max(3650) Integer goalDays,
+                              @Min(3) @Max(3650) Integer goalDays,
                               @NotNull @Size(max=3650) List<@Valid ImportEntry> entries) {}
     public record ImportEntry(@NotNull LocalDate date, @Min(1) @Max(5) Integer value, Boolean success,
                               @Size(max=16) String emoji, @Size(max=280) String note) {}

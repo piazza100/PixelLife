@@ -39,6 +39,17 @@ class PixelLifeServiceTest {
     }
 
     @Test
+    void customGoalMustBeAtLeastThreeDays() {
+        when(mapper.countActiveBoards(1L)).thenReturn(0);
+
+        assertThatThrownBy(() -> service.createBoard(1L, "Too short", "LEVEL", LocalDate.now(), 2))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Goal days must be between 3 and 3650");
+
+        verify(mapper, never()).insertBoard(any(BoardRow.class));
+    }
+
+    @Test
     void sameDayBoardCannotBeCompletedForXp() {
         BoardRow board = board(LocalDate.now(), LocalDateTime.now(), 30);
         when(mapper.findBoard(10L, 1L)).thenReturn(board);
@@ -59,6 +70,19 @@ class PixelLifeServiceTest {
         assertThatThrownBy(() -> service.complete(1L, 10L))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining(LocalDate.now().plusDays(6).toString());
+
+        verify(mapper, never()).completeBoard(anyLong(), anyLong(), anyInt(), anyInt());
+    }
+
+    @Test
+    void fixedGoalBoardOpensAtTheHalfwayDay() {
+        LocalDate start = LocalDate.now().minusDays(13);
+        BoardRow board = board(start, LocalDateTime.now().minusDays(30), 30);
+        when(mapper.findBoard(10L, 1L)).thenReturn(board);
+
+        assertThatThrownBy(() -> service.complete(1L, 10L))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining(start.plusDays(14).toString());
 
         verify(mapper, never()).completeBoard(anyLong(), anyLong(), anyInt(), anyInt());
     }

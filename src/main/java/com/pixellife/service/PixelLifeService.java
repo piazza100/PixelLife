@@ -68,7 +68,7 @@ public class PixelLifeService {
             default -> throw new IllegalArgumentException("Unsupported board type");
         };
         if (name == null || name.isBlank() || name.length() > 80) throw new IllegalArgumentException("Board name is required");
-        if (goalDays != null && (goalDays < 1 || goalDays > 3650)) throw new IllegalArgumentException("Goal days must be between 1 and 3650");
+        if (goalDays != null && (goalDays < 3 || goalDays > 3650)) throw new IllegalArgumentException("Goal days must be between 3 and 3650");
         LocalDate safeStartDate = startDate == null ? LocalDate.now() : startDate;
         if (safeStartDate.isAfter(LocalDate.now())) throw new IllegalArgumentException("Start date cannot be in the future");
         BoardRow board = new BoardRow(); board.setUserId(userId); board.setName(name.trim()); board.setBoardType(boardType);
@@ -172,15 +172,17 @@ public class PixelLifeService {
         BoardRow board = requireBoard(userId, boardId);
         if (!"ACTIVE".equals(board.getStatus())) throw new IllegalStateException("Board is already complete");
         requireWritable(userId, boardId);
-        LocalDate rewardDate = board.getStartDate().plusDays(6);
-        LocalDate targetDate = board.getGoalDays() == null ? rewardDate : board.getStartDate().plusDays(board.getGoalDays() - 1L);
-        LocalDate eligibleDate = targetDate.isAfter(rewardDate) ? targetDate : rewardDate;
+        LocalDate eligibleDate = board.getGoalDays() == null
+            ? board.getStartDate().plusDays(6)
+            : board.getStartDate().plusDays(Math.max(0, Math.floorDiv(board.getGoalDays() + 1, 2) - 1L));
         if (LocalDate.now().isBefore(eligibleDate)) throw new IllegalStateException("This board can finish on " + eligibleDate);
         int elapsed = (int) (LocalDate.now().toEpochDay() - board.getStartDate().toEpochDay()) + 1;
         int goal = board.getGoalDays() == null ? elapsed : board.getGoalDays();
         BoardScoringService.Score result = scoring.score(goal, mapper.countEntries(boardId), mapper.countNotes(boardId));
-        if (mapper.completeBoard(boardId, userId, result.points(), result.xp()) != 1) throw new IllegalStateException("Board could not be completed");
-        mapper.addXp(userId, result.xp());
+        int remainingDailyXp = Math.max(0, 100 - mapper.sumXpAwardedOnDate(userId, LocalDate.now(ZoneOffset.UTC)));
+        int awardedXp = Math.min(result.xp(), remainingDailyXp);
+        if (mapper.completeBoard(boardId, userId, result.points(), awardedXp) != 1) throw new IllegalStateException("Board could not be completed");
+        if (awardedXp > 0) mapper.addXp(userId, awardedXp);
         int totalXp = number(mapper.findProgress(userId).get("totalXp"));
         String grade = grade(totalXp); mapper.updateGrade(userId, grade);
         Map<String,Object> plantSpecies = weightedPick(mapper.findSpeciesPool(poolLimit(grade)));
@@ -189,7 +191,7 @@ public class PixelLifeService {
         int index = mapper.nextPlantIndex(userId);
         mapper.insertPlant(userId, boardId, String.valueOf(plantSpecies.get("code")), String.valueOf(plantColor.get("code")), index % 12, index / 12);
         refreshRewards(userId);
-        return Map.of("score", result.points(), "xp", result.xp(), "grade", grade, "species", plantSpecies, "color", plantColor);
+        return Map.of("score", result.points(), "xp", awardedXp, "grade", grade, "species", plantSpecies, "color", plantColor);
     }
 
     @Transactional

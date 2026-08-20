@@ -93,6 +93,9 @@ public interface PixelLifeMapper {
     @Update("UPDATE users SET total_xp=total_xp+#{xp} WHERE id=#{userId}")
     void addXp(Long userId, int xp);
 
+    @Select("SELECT COALESCE(SUM(xp_awarded),0) FROM boards WHERE user_id=#{userId} AND completed_at IS NOT NULL AND DATE(completed_at)=#{date}")
+    int sumXpAwardedOnDate(Long userId, java.time.LocalDate date);
+
     @Select("SELECT COUNT(*) FROM daily_visits WHERE user_id=#{userId}") int countVisits(Long userId);
     @Select("SELECT COUNT(*) FROM pixel_entries e JOIN boards b ON b.id=e.board_id WHERE b.user_id=#{userId}") int countPixels(Long userId);
     @Select("SELECT COUNT(*) FROM plants WHERE user_id=#{userId}") int countPlants(Long userId);
