@@ -22,7 +22,8 @@ public class PixelLifeController {
 
     @GetMapping("/bootstrap")
     public Map<String, Object> bootstrap(@AuthenticationPrincipal OidcUser user, @RequestParam(defaultValue="en") String locale) {
-        return service.bootstrap(service.memberId(user.getSubject()));
+        long userId = service.ensureMember(user.getSubject(), user.getEmail(), user.getFullName(), user.getPicture(), locale);
+        return service.bootstrap(userId);
     }
 
     @GetMapping("/me")

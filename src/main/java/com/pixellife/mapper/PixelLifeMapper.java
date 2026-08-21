@@ -93,8 +93,22 @@ public interface PixelLifeMapper {
     @Update("UPDATE users SET total_xp=total_xp+#{xp} WHERE id=#{userId}")
     void addXp(Long userId, int xp);
 
-    @Select("SELECT COALESCE(SUM(xp_awarded),0) FROM boards WHERE user_id=#{userId} AND completed_at IS NOT NULL AND DATE(completed_at)=#{date}")
+    @Select("SELECT COALESCE(SUM(xp_awarded),0) FROM boards WHERE user_id=#{userId} AND completed_at>=#{date} AND completed_at<DATE_ADD(#{date}, INTERVAL 1 DAY)")
     int sumXpAwardedOnDate(Long userId, java.time.LocalDate date);
+
+    @Select("""
+        SELECT
+          (SELECT COUNT(*) FROM daily_visits WHERE user_id=#{userId}) AS visitDays,
+          (SELECT COUNT(*) FROM pixel_entries e JOIN boards b ON b.id=e.board_id WHERE b.user_id=#{userId}) AS pixelCount,
+          (SELECT COUNT(*) FROM plants WHERE user_id=#{userId}) AS plantCount,
+          (SELECT COUNT(DISTINCT species_code) FROM plants WHERE user_id=#{userId}) AS speciesCount,
+          (SELECT COUNT(*) FROM boards WHERE user_id=#{userId} AND final_score=100) AS perfectCount,
+          (SELECT COUNT(*) FROM pixel_entries e JOIN boards b ON b.id=e.board_id WHERE b.user_id=#{userId} AND e.note IS NOT NULL AND e.note<>'') AS noteCount,
+          COALESCE((SELECT MAX(streak) FROM (SELECT COUNT(*) streak FROM (SELECT entry_date,DATE_SUB(entry_date,INTERVAL ROW_NUMBER() OVER(ORDER BY entry_date) DAY) grp FROM (SELECT DISTINCT e.entry_date FROM pixel_entries e JOIN boards b ON b.id=e.board_id WHERE b.user_id=#{userId}) d) x GROUP BY grp) y),0) AS maxStreak,
+          (SELECT COUNT(DISTINCT board_type) FROM boards WHERE user_id=#{userId} AND status='COMPLETED') AS completedTypeCount,
+          (SELECT COUNT(*) FROM boards WHERE user_id=#{userId} AND status='COMPLETED' AND goal_days>=90) AS longBoardCount
+        """)
+    Map<String,Object> findRewardMetrics(Long userId);
 
     @Select("SELECT COUNT(*) FROM daily_visits WHERE user_id=#{userId}") int countVisits(Long userId);
     @Select("SELECT COUNT(*) FROM pixel_entries e JOIN boards b ON b.id=e.board_id WHERE b.user_id=#{userId}") int countPixels(Long userId);

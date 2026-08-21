@@ -12,3 +12,6 @@
 html[lang='ko'] .guide-reward-combined .guide-badge-cards::before { content: '기본 색상  ● Green   ● Cream  ·  처음부터 사용 가능'; }
 html[lang='zh'] .guide-reward-combined .guide-badge-cards::before { content: '基础颜色  ● Green   ● Cream  ·  从一开始即可使用'; }
 html[lang='ja'] .guide-reward-combined .guide-badge-cards::before { content: '基本カラー  ● Green   ● Cream  ·  最初から利用可能'; }
+
+html, body, .app { overscroll-behavior-x: none; }
+.calendar-card { touch-action: pan-y; overscroll-behavior: contain; }

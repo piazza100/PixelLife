@@ -46,7 +46,7 @@ async function request<T>(path:string,init?:RequestInit):Promise<T>{
 
 export const pixelLifeApi={
   me:(locale='en')=>request<Member>(`/me?locale=${locale}`),
-  bootstrap:(locale='en')=>request<{boards:ApiBoard[];entries:Array<ApiEntry&{boardId:number}>;rewards:RewardData}>(`/bootstrap?locale=${locale}`),
+  bootstrap:(locale='en')=>request<{member:Member;boards:ApiBoard[];entries:Array<ApiEntry&{boardId:number}>;rewards:RewardData}>(`/bootstrap?locale=${locale}`),
   createBoard:(body:{name:string;type:'LEVEL'|'CHECK'|'MOOD';startDate:string;goalDays:number|null})=>request<ApiBoard>('/boards',{method:'POST',body:JSON.stringify(body)}),
   importGuestBoard:(body:{name:string;type:'LEVEL'|'CHECK'|'MOOD';startDate:string;goalDays:number|null;entries:Array<{date:string;value?:number;success?:boolean;emoji?:string;note?:string}>})=>request<ApiBoard>('/boards/import',{method:'POST',body:JSON.stringify(body)}),
   getBoard:(id:number)=>request<BoardDetail>(`/boards/${id}`),

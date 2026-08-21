@@ -51,8 +51,10 @@ public class PixelLifeService {
         if (mapper.deleteMember(userId) != 1) throw new IllegalStateException("Account could not be deleted");
     }
 
+    @Transactional
     public Map<String, Object> bootstrap(long userId) {
-        return Map.of("boards", mapper.findBoards(userId), "entries", mapper.findEntriesForUser(userId), "rewards", rewards(userId));
+        Map<String,Object> account = member(userId);
+        return Map.of("member", account, "boards", mapper.findBoards(userId), "entries", mapper.findEntriesForUser(userId), "rewards", rewards(userId, account));
     }
 
     @Transactional
@@ -202,9 +204,14 @@ public class PixelLifeService {
 
     @Transactional
     public Map<String, Object> rewards(long userId) {
-        refreshRewards(userId);
-        Map<String, Object> progress = new HashMap<>(mapper.findProgress(userId));
-        progress.put("badges", badgeProgress(userId)); progress.put("plants", mapper.findPlants(userId));
+        return rewards(userId, member(userId));
+    }
+
+    private Map<String,Object> rewards(long userId, Map<String,Object> account) {
+        RewardSnapshot snapshot = refreshRewards(userId);
+        Map<String, Object> progress = new HashMap<>();
+        progress.put("totalXp", account.get("totalXp")); progress.put("gradeCode", account.get("gradeCode"));
+        progress.put("badges", badgeProgress(snapshot.metrics(), snapshot.badges())); progress.put("plants", mapper.findPlants(userId));
         String grade=String.valueOf(progress.get("gradeCode"));List<Map<String,Object>> pool=mapper.findSpeciesPool(poolLimit(grade));int total=pool.stream().mapToInt(v->number(v.get("weightValue"))).sum();
         pool.forEach(v->v.put("chance",Math.round(number(v.get("weightValue"))*1000d/total)/10d));
         progress.put("speciesPool",pool);progress.put("unlockedColors",mapper.findUnlockedColors(userId));progress.put("gradeGuide", gradeGuide()); return progress;
@@ -225,24 +232,33 @@ public class PixelLifeService {
         return paidUntil instanceof LocalDateTime time && !time.isBefore(LocalDateTime.now(ZoneOffset.UTC));
     }
 
-    private void refreshRewards(long userId) {
+    private RewardSnapshot refreshRewards(long userId) {
         Map<String, Integer> metrics = metrics(userId);
-        for (Map<String, Object> badge : mapper.findBadges(userId)) {
+        List<Map<String,Object>> badges = mapper.findBadges(userId); boolean changed = false;
+        for (Map<String, Object> badge : badges) {
             boolean earned = Boolean.TRUE.equals(badge.get("earned")) || number(badge.get("earned")) == 1;
             int current = metrics.getOrDefault(String.valueOf(badge.get("metricCode")), 0);
-            if (!earned && current >= number(badge.get("targetValue"))) mapper.awardBadge(userId, String.valueOf(badge.get("code")));
+            if (!earned && current >= number(badge.get("targetValue"))) changed |= mapper.awardBadge(userId, String.valueOf(badge.get("code"))) == 1;
         }
-        Map<String, Object> progress = mapper.findProgress(userId); String grade = grade(number(progress.get("totalXp")));
-        if (!grade.equals(progress.get("gradeCode"))) mapper.updateGrade(userId, grade);
+        return new RewardSnapshot(metrics, changed ? mapper.findBadges(userId) : badges);
     }
 
-    private List<Map<String, Object>> badgeProgress(long userId) {
-        Map<String, Integer> metrics = metrics(userId); List<Map<String, Object>> result = new ArrayList<>();
-        for (Map<String, Object> source : mapper.findBadges(userId)) { Map<String, Object> item = new HashMap<>(source); item.put("currentValue", metrics.getOrDefault(String.valueOf(source.get("metricCode")), 0)); result.add(item); }
+    private List<Map<String, Object>> badgeProgress(Map<String,Integer> metrics, List<Map<String,Object>> badges) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> source : badges) { Map<String, Object> item = new HashMap<>(source); item.put("currentValue", metrics.getOrDefault(String.valueOf(source.get("metricCode")), 0)); result.add(item); }
         return result;
     }
 
-    private Map<String, Integer> metrics(long userId) { Map<String,Integer> m=new HashMap<>();m.put("VISIT_DAYS",mapper.countVisits(userId));m.put("PIXEL_COUNT",mapper.countPixels(userId));m.put("PLANT_COUNT",mapper.countPlants(userId));m.put("SPECIES_COUNT",mapper.countSpecies(userId));m.put("PERFECT_COUNT",mapper.countPerfect(userId));m.put("NOTE_COUNT",mapper.countAllNotes(userId));m.put("MAX_STREAK",Optional.ofNullable(mapper.maxRecordStreak(userId)).orElse(0));m.put("COMPLETED_TYPE_COUNT",mapper.countCompletedTypes(userId));m.put("LONG_BOARD_COUNT",mapper.countLongBoards(userId));return m; }
+    private record RewardSnapshot(Map<String,Integer> metrics, List<Map<String,Object>> badges) {}
+
+    private Map<String, Integer> metrics(long userId) {
+        Map<String,Object> row=mapper.findRewardMetrics(userId);Map<String,Integer> m=new HashMap<>();
+        m.put("VISIT_DAYS",number(row.get("visitDays")));m.put("PIXEL_COUNT",number(row.get("pixelCount")));
+        m.put("PLANT_COUNT",number(row.get("plantCount")));m.put("SPECIES_COUNT",number(row.get("speciesCount")));
+        m.put("PERFECT_COUNT",number(row.get("perfectCount")));m.put("NOTE_COUNT",number(row.get("noteCount")));
+        m.put("MAX_STREAK",number(row.get("maxStreak")));
+        m.put("COMPLETED_TYPE_COUNT",number(row.get("completedTypeCount")));m.put("LONG_BOARD_COUNT",number(row.get("longBoardCount")));return m;
+    }
     private String grade(int xp) {
         if (xp >= 3000) return "CONSERVATOR";
         if (xp >= 1500) return "BOTANIST";
