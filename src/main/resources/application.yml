@@ -16,6 +16,11 @@ spring:
     enabled: true
     locations: classpath:db/migration
     validate-on-migrate: true
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: never
+      cleanup-cron: "-"
   security:
     oauth2:
       client:
@@ -33,6 +38,11 @@ mybatis:
 server:
   port: ${PORT:${SERVER_PORT:8080}}
   forward-headers-strategy: framework
+  servlet:
+    session:
+      timeout: 30d
+      cookie:
+        max-age: 30d
 management:
   endpoints.web.exposure.include: health,info
   endpoint.health.show-details: never

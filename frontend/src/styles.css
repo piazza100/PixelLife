@@ -1171,11 +1171,18 @@ footer b {
   display: none;
 }
 .board-dates {
-  display: block !important;
+  display: flex !important;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
   margin-top: 8px !important;
   color: #9a9d96 !important;
   font: 500 8px "DM Mono" !important;
   letter-spacing: 0 !important;
+}
+.board-dates > span:first-child {
+  color: #687168;
+  font-weight: 700;
 }
 .check-today {
   width: 100%;
@@ -2493,7 +2500,10 @@ body[data-board-type="mood"] .calendar-key {
   margin: 13px 0 0;
 }
 .board-card.compact .board-dates {
-  display: block;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
   margin-top: 7px;
   color: #969a92;
   letter-spacing: 0;

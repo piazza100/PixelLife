@@ -12,5 +12,6 @@ server:
   servlet:
     session:
       cookie:
+        max-age: 30d
         secure: true
         same-site: none

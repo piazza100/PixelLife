@@ -2469,7 +2469,12 @@ function BoardCard({
           {wins} {t.wins} · {Math.round((wins / days) * 100)}%
         </p>
         <small className="board-dates">
-          {board.startDate} → {endDate(board) || "∞"}
+          <span>
+            {t.period}: {board.goalDays === null ? "∞" : `${board.goalDays} ${t.days}`}
+          </span>
+          <span>
+            {board.startDate} → {endDate(board) || "∞"}
+          </span>
         </small>
       </div>
       <div className="card-pixels">
