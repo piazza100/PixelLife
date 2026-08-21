@@ -15,10 +15,10 @@ class RewardCatalogTest {
     );
 
     @Test
-    void everyBoardThemeUsesACanonicalRewardColor() {
-        assertEquals(8, PixelLifeService.COLORS.size());
-        assertEquals(8, PixelLifeService.COLORS.stream().distinct().count());
-        assertTrue(REWARD_COLORS.containsAll(PixelLifeService.COLORS));
+    void rewardCatalogHasTwoBaseColorsAndNoDuplicates() {
+        assertEquals(13, REWARD_COLORS.size());
+        assertEquals(13, REWARD_COLORS.stream().distinct().count());
+        assertEquals(List.of("#159651", "#D8CFAF"), REWARD_COLORS.subList(0, 2));
     }
 
     @Test
