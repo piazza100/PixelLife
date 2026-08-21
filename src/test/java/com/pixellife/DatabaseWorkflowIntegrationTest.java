@@ -88,11 +88,11 @@ class DatabaseWorkflowIntegrationTest {
         record GradeCase(String grade, int initialXp, Set<String> species) {}
         List<GradeCase> cases = List.of(
             new GradeCase("SEED", 0, Set.of("OAK", "CACTUS")),
-            new GradeCase("SPROUT", 100, Set.of("OAK", "CACTUS", "TULIP", "PINE")),
-            new GradeCase("GROVE", 300, Set.of("OAK", "CACTUS", "TULIP", "PINE", "FERN", "SUNFLOWER")),
-            new GradeCase("GARDENER", 700, Set.of("OAK", "CACTUS", "TULIP", "PINE", "FERN", "SUNFLOWER", "MAPLE", "LOTUS")),
-            new GradeCase("BOTANIST", 1500, Set.of("OAK", "CACTUS", "TULIP", "PINE", "FERN", "SUNFLOWER", "MAPLE", "LOTUS", "BAMBOO", "CHERRY")),
-            new GradeCase("CONSERVATOR", 3000, Set.of("OAK", "CACTUS", "TULIP", "PINE", "FERN", "SUNFLOWER", "MAPLE", "LOTUS", "BAMBOO", "CHERRY", "PALM", "CRYSTAL"))
+            new GradeCase("SPROUT", 30, Set.of("OAK", "CACTUS", "TULIP", "PINE")),
+            new GradeCase("GROVE", 60, Set.of("OAK", "CACTUS", "TULIP", "PINE", "FERN", "SUNFLOWER")),
+            new GradeCase("GARDENER", 90, Set.of("OAK", "CACTUS", "TULIP", "PINE", "FERN", "SUNFLOWER", "MAPLE", "LOTUS")),
+            new GradeCase("BOTANIST", 120, Set.of("OAK", "CACTUS", "TULIP", "PINE", "FERN", "SUNFLOWER", "MAPLE", "LOTUS", "BAMBOO", "CHERRY")),
+            new GradeCase("CONSERVATOR", 150, Set.of("OAK", "CACTUS", "TULIP", "PINE", "FERN", "SUNFLOWER", "MAPLE", "LOTUS", "BAMBOO", "CHERRY", "PALM", "CRYSTAL"))
         );
         LocalDate start = LocalDate.now().minusDays(2);
         for (GradeCase gradeCase : cases) {

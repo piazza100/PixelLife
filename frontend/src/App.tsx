@@ -3531,11 +3531,11 @@ function GuideRewardRules({ locale }: { locale: Locale }) {
   }[locale];
   const grades = [
     ["Seed", 0, 2],
-    ["Sprout", 100, 4],
-    ["Grove", 300, 6],
-    ["Gardener", 700, 8],
-    ["Botanist", 1500, 10],
-    ["Conservator", 3000, 12],
+    ["Sprout", 30, 4],
+    ["Grove", 60, 6],
+    ["Gardener", 90, 8],
+    ["Botanist", 120, 10],
+    ["Conservator", 150, 12],
   ];
   const badges = [
     ["Visitor", "7 days", "#4F8FD8"],
@@ -3843,11 +3843,11 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
   }[locale];
   const grades = [
     ["Seed", 0, 2],
-    ["Sprout", 100, 4],
-    ["Grove", 300, 6],
-    ["Gardener", 700, 8],
-    ["Botanist", 1500, 10],
-    ["Conservator", 3000, 12],
+    ["Sprout", 30, 4],
+    ["Grove", 60, 6],
+    ["Gardener", 90, 8],
+    ["Botanist", 120, 10],
+    ["Conservator", 150, 12],
   ];
   const details = {
     en: [
@@ -4102,11 +4102,11 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
   ];
   const grades = [
     ["Seed", 0, 2],
-    ["Sprout", 100, 4],
-    ["Grove", 300, 6],
-    ["Gardener", 700, 8],
-    ["Botanist", 1500, 10],
-    ["Conservator", 3000, 12],
+    ["Sprout", 30, 4],
+    ["Grove", 60, 6],
+    ["Gardener", 90, 8],
+    ["Botanist", 120, 10],
+    ["Conservator", 150, 12],
   ] as const;
   const badgeRules = {
     en: [

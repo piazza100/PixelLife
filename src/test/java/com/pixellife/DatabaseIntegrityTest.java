@@ -129,11 +129,11 @@ class DatabaseIntegrityTest {
         assertZero("stored grade does not match total XP", """
             SELECT COUNT(*) FROM users
             WHERE grade_code <> CASE
-              WHEN total_xp >= 3000 THEN 'CONSERVATOR'
-              WHEN total_xp >= 1500 THEN 'BOTANIST'
-              WHEN total_xp >= 700 THEN 'GARDENER'
-              WHEN total_xp >= 300 THEN 'GROVE'
-              WHEN total_xp >= 100 THEN 'SPROUT'
+              WHEN total_xp >= 150 THEN 'CONSERVATOR'
+              WHEN total_xp >= 120 THEN 'BOTANIST'
+              WHEN total_xp >= 90 THEN 'GARDENER'
+              WHEN total_xp >= 60 THEN 'GROVE'
+              WHEN total_xp >= 30 THEN 'SPROUT'
               ELSE 'SEED' END
             """);
     }

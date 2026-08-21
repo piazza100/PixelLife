@@ -3119,6 +3119,8 @@ header {
   content: "×";
   font-size: 9px;
   font-weight: 900;
+  line-height: 1;
+  transform: translateY(-1px);
 }
 .guide-species {
   width: min(980px, calc(100% - 36px));
@@ -3291,12 +3293,30 @@ body[data-board-type="check"] .calendar-grid button.done.level-0:before {
   grid-row: 3;
 }
 .guide-types > div:nth-child(2) > b {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   font-size: 0;
 }
+.guide-types > div:nth-child(2) > b:before,
 .guide-types > div:nth-child(2) > b:after {
-  content: "✓ ×";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 9px;
+  height: 12px;
+  font-family: Arial, sans-serif;
   font-size: 10px;
+  font-weight: 600;
+  line-height: 12px;
   white-space: nowrap;
+}
+.guide-types > div:nth-child(2) > b:before {
+  content: "✓";
+}
+.guide-types > div:nth-child(2) > b:after {
+  content: "×";
 }
 @media (max-width: 760px) {
   .guide-types {
@@ -3380,7 +3400,7 @@ body[data-board-type="check"] .calendar-grid button.done.level-0:before {
 }
 .finish-panel:after {
   position: absolute;
-  top: 14px;
+  top: 17px;
   right: 17px;
   padding: 0;
   background: transparent;
@@ -3522,6 +3542,8 @@ body[data-board-type="check"] .calendar-grid button.done.level-0:before {
 .sample-board-grid > article:nth-child(2) > b:after {
   content: "✓ ×";
   font-size: 10px;
+  line-height: 1;
+  transform: translateY(-1px);
 }
 body[data-board-type="check"] .detail-head h1:before {
   content: "✓ ×";
