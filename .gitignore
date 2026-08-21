@@ -26,6 +26,7 @@ target/
 *.jar
 *.war
 .mvn/timing.properties
+.m2/
 
 # Frontend dependencies and generated output
 frontend/node_modules/

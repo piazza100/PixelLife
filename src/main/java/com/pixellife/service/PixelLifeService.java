@@ -67,7 +67,7 @@ public class PixelLifeService {
             case "LEVEL", "CHECK", "MOOD" -> type.toUpperCase(Locale.ROOT);
             default -> throw new IllegalArgumentException("Unsupported board type");
         };
-        if (name == null || name.isBlank() || name.length() > 80) throw new IllegalArgumentException("Board name is required");
+        if (name == null || name.isBlank() || name.length() > 24) throw new IllegalArgumentException("Board name must be 1 to 24 characters");
         if (goalDays != null && (goalDays < 3 || goalDays > 3650)) throw new IllegalArgumentException("Goal days must be between 3 and 3650");
         LocalDate safeStartDate = startDate == null ? LocalDate.now() : startDate;
         if (safeStartDate.isAfter(LocalDate.now())) throw new IllegalArgumentException("Start date cannot be in the future");
