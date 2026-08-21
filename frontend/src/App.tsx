@@ -2507,6 +2507,39 @@ function RewardsPage({
   rewards: RewardData | null;
   locale: Locale;
 }) {
+  const badgeCopy: Record<Locale, Record<string, [string, string]>> = {
+    en: {
+      VISITOR: ["Visitor", "Visit on 7 different days."], PIXEL: ["Pixel", "Save 30 daily records."], GARDENER: ["Gardener", "Complete 3 plants."], COLLECTOR: ["Collector", "Collect 4 different plant species."], PERFECT: ["Perfect", "Finish one board at 100%."], NOTEBOOK: ["Notebook", "Save 20 records with a note."], STEADY_WEEK: ["Steady Week", "Record 7 days in a row."], THREE_WAYS: ["Three Ways", "Complete all 3 board types."], LONG_JOURNEY: ["Long Journey", "Complete a board of 90 days or more."], HUNDRED_PIXELS: ["Hundred Pixels", "Save 100 daily records."], FULL_GARDEN: ["Full Garden", "Complete 10 plants."],
+    },
+    ko: {
+      VISITOR: ["방문자", "서로 다른 날짜에 7일 방문하세요."], PIXEL: ["픽셀", "하루 기록을 30개 저장하세요."], GARDENER: ["정원사", "식물 3개를 완성하세요."], COLLECTOR: ["수집가", "서로 다른 식물 4종을 모으세요."], PERFECT: ["완벽", "완료율 100% 보드 1개를 완성하세요."], NOTEBOOK: ["기록가", "메모가 있는 기록을 20개 저장하세요."], STEADY_WEEK: ["꾸준한 한 주", "7일 연속 기록하세요."], THREE_WAYS: ["세 가지 방식", "3가지 보드 종류를 모두 완료하세요."], LONG_JOURNEY: ["긴 여정", "90일 이상 보드를 완료하세요."], HUNDRED_PIXELS: ["백 개의 픽셀", "하루 기록을 100개 저장하세요."], FULL_GARDEN: ["가득 찬 정원", "식물 10개를 완성하세요."],
+    },
+    zh: {
+      VISITOR: ["访客", "在7个不同日期访问。"], PIXEL: ["像素", "保存30条每日记录。"], GARDENER: ["园丁", "完成3株植物。"], COLLECTOR: ["收藏家", "收集4种不同植物。"], PERFECT: ["完美", "完成一个达成率100%的面板。"], NOTEBOOK: ["记录者", "保存20条带笔记的记录。"], STEADY_WEEK: ["稳定一周", "连续记录7天。"], THREE_WAYS: ["三种方式", "完成全部3种面板。"], LONG_JOURNEY: ["漫长旅程", "完成一个90天以上的面板。"], HUNDRED_PIXELS: ["百个像素", "保存100条每日记录。"], FULL_GARDEN: ["满园", "完成10株植物。"],
+    },
+    ja: {
+      VISITOR: ["訪問者", "異なる日に7日訪問します。"], PIXEL: ["ピクセル", "毎日の記録を30件保存します。"], GARDENER: ["庭師", "植物を3個完成します。"], COLLECTOR: ["収集家", "異なる植物を4種類集めます。"], PERFECT: ["パーフェクト", "達成率100%のボードを1個完了します。"], NOTEBOOK: ["記録家", "メモ付き記録を20件保存します。"], STEADY_WEEK: ["安定した一週間", "7日連続で記録します。"], THREE_WAYS: ["三つの方法", "3種類のボードをすべて完了します。"], LONG_JOURNEY: ["長い旅", "90日以上のボードを完了します。"], HUNDRED_PIXELS: ["百個のピクセル", "毎日の記録を100件保存します。"], FULL_GARDEN: ["満開の庭", "植物を10個完成します。"],
+    },
+  };
+  const colorHex: Record<string, string> = { SKY: "#4F8FD8", ORANGE: "#D6763E", VIOLET: "#8967C7", ROSE: "#C85F7A", GOLD: "#D3A62B", MINT: "#54BFA3", TEAL: "#2F8C83", INDIGO: "#5666A5", CORAL: "#D96F62", RUBY: "#B94C5B", SLATE: "#62707D" };
+  const colorNames: Record<Locale, Record<string, string>> = {
+    en: { SKY: "Sky", ORANGE: "Orange", VIOLET: "Violet", ROSE: "Rose", GOLD: "Gold", MINT: "Mint", TEAL: "Teal", INDIGO: "Indigo", CORAL: "Coral", RUBY: "Ruby", SLATE: "Slate" },
+    ko: { SKY: "하늘색", ORANGE: "주황색", VIOLET: "보라색", ROSE: "장미색", GOLD: "금색", MINT: "민트색", TEAL: "청록색", INDIGO: "남색", CORAL: "코랄색", RUBY: "루비색", SLATE: "회청색" },
+    zh: { SKY: "天蓝", ORANGE: "橙色", VIOLET: "紫色", ROSE: "玫瑰色", GOLD: "金色", MINT: "薄荷色", TEAL: "蓝绿色", INDIGO: "靛蓝", CORAL: "珊瑚色", RUBY: "宝石红", SLATE: "石板灰" },
+    ja: { SKY: "空色", ORANGE: "オレンジ", VIOLET: "紫", ROSE: "ローズ", GOLD: "ゴールド", MINT: "ミント", TEAL: "青緑", INDIGO: "藍色", CORAL: "コーラル", RUBY: "ルビー", SLATE: "スレート" },
+  };
+  const gradeNames: Record<Locale, Record<string, string>> = {
+    en: { SEED: "Seed", SPROUT: "Sprout", GROVE: "Grove", GARDENER: "Gardener", BOTANIST: "Botanist", CONSERVATOR: "Conservator" },
+    ko: { SEED: "씨앗", SPROUT: "새싹", GROVE: "숲", GARDENER: "정원사", BOTANIST: "식물학자", CONSERVATOR: "보존가" },
+    zh: { SEED: "种子", SPROUT: "新芽", GROVE: "树林", GARDENER: "园丁", BOTANIST: "植物学家", CONSERVATOR: "守护者" },
+    ja: { SEED: "種", SPROUT: "芽", GROVE: "木立", GARDENER: "庭師", BOTANIST: "植物学者", CONSERVATOR: "保全者" },
+  };
+  const speciesNames: Record<Locale, Record<string, string>> = {
+    en: { OAK: "Oak", CACTUS: "Cactus", TULIP: "Tulip", PINE: "Pine", FERN: "Fern", SUNFLOWER: "Sunflower", MAPLE: "Maple", LOTUS: "Lotus", BAMBOO: "Bamboo", CHERRY: "Cherry", PALM: "Palm", CRYSTAL: "Crystal Plant" },
+    ko: { OAK: "참나무", CACTUS: "선인장", TULIP: "튤립", PINE: "소나무", FERN: "고사리", SUNFLOWER: "해바라기", MAPLE: "단풍나무", LOTUS: "연꽃", BAMBOO: "대나무", CHERRY: "벚나무", PALM: "야자나무", CRYSTAL: "수정 식물" },
+    zh: { OAK: "橡树", CACTUS: "仙人掌", TULIP: "郁金香", PINE: "松树", FERN: "蕨类", SUNFLOWER: "向日葵", MAPLE: "枫树", LOTUS: "莲花", BAMBOO: "竹子", CHERRY: "樱花树", PALM: "棕榈树", CRYSTAL: "水晶植物" },
+    ja: { OAK: "オーク", CACTUS: "サボテン", TULIP: "チューリップ", PINE: "松", FERN: "シダ", SUNFLOWER: "ひまわり", MAPLE: "カエデ", LOTUS: "蓮", BAMBOO: "竹", CHERRY: "桜", PALM: "ヤシ", CRYSTAL: "クリスタル植物" },
+  };
   const c = {
     en: {
       home: "← Home",
@@ -2519,6 +2552,10 @@ function RewardsPage({
       of: "of",
       earned: "earned",
       badgeHelp: "Each badge adds one plant color to future board rewards.",
+      progress: "Progress",
+      goal: "Goal",
+      done: "Earned",
+      notStarted: "Not started",
       empty: "Your reward guide will appear after the account data loads.",
     },
     ko: {
@@ -2530,34 +2567,46 @@ function RewardsPage({
       draw: "현재 랜덤 보상",
       badges: "컬러 배지",
       of: "개 중",
-      earned: "개 획득",
+      earned: "획득",
       badgeHelp: "배지 하나마다 앞으로 받을 수 있는 식물 색상이 하나 늘어요.",
+      progress: "진행",
+      goal: "목표",
+      done: "달성",
+      notStarted: "시작 전",
       empty: "계정 데이터를 불러오면 보상 안내가 표시돼요.",
     },
     zh: {
       home: "← 首页",
       loading: "正在加载奖励…",
       title: "完成面板，扩大你的奖励池。",
-      help: "最终面板分数会变成XP。等级解锁植物种类，徽章解锁植物颜色。",
+      help: "完成面板时，每个记录日获得1 XP。等级解锁植物种类，徽章解锁植物颜色。",
       pool: "种植物进入随机奖励池",
       draw: "当前随机奖励",
       badges: "颜色徽章",
       of: "个中",
-      earned: "个已获得",
+      earned: "已获得",
       badgeHelp: "每个徽章都会为未来奖励增加一种植物颜色。",
+      progress: "进度",
+      goal: "目标",
+      done: "已获得",
+      notStarted: "未开始",
       empty: "账户数据加载后会显示奖励说明。",
     },
     ja: {
       home: "← ホーム",
       loading: "報酬を読み込み中…",
       title: "ボードを完了して報酬プールを育てよう。",
-      help: "最終スコアがXPになります。等級は植物の種類、バッジは植物の色を解放します。",
+      help: "ボード完了時、記録した1日につき1 XPを獲得します。等級は植物の種類、バッジは植物の色を解放します。",
       pool: "種類がランダム報酬プールに含まれます",
       draw: "現在の抽選内容",
       badges: "カラーバッジ",
       of: "個中",
-      earned: "個獲得",
+      earned: "獲得",
       badgeHelp: "バッジ一つごとに今後の植物カラーが一つ増えます。",
+      progress: "進捗",
+      goal: "目標",
+      done: "獲得済み",
+      notStarted: "未開始",
       empty: "アカウントデータの読み込み後に報酬ガイドが表示されます。",
     },
   }[locale];
@@ -2580,7 +2629,7 @@ function RewardsPage({
       </button>
       <section className="guide-hero reward-hero">
         <p className="eyebrow">
-          {rewards.gradeCode} · {rewards.totalXp} XP
+          {gradeNames[locale][rewards.gradeCode] || titleCase(rewards.gradeCode)} · {rewards.totalXp} XP
         </p>
         <h1>{c.title}</h1>
         <p>{c.help}</p>
@@ -2592,7 +2641,7 @@ function RewardsPage({
             key={item.code}
           >
             <span>{item.species}</span>
-            <h2>{titleCase(item.code)}</h2>
+            <h2>{gradeNames[locale][item.code] || titleCase(item.code)}</h2>
             <b>{item.xp.toLocaleString()} XP</b>
             <p>
               {item.species} {c.pool}
@@ -2606,14 +2655,14 @@ function RewardsPage({
           <h2>{c.draw}</h2>
           <p>
             {rewards.speciesPool
-              .map((item) => `${item.symbol} ${item.name} ${item.chance}%`)
+              .map((item) => `${item.symbol} ${speciesNames[locale][item.code] || item.name} ${item.chance}%`)
               .join(" · ")}
           </p>
           <div className="reward-colors">
             {rewards.unlockedColors.map((color) => (
               <i
                 key={color.code}
-                title={titleCase(color.code)}
+                title={colorNames[locale][color.code] || titleCase(color.code)}
                 style={{ background: color.cssColor }}
               />
             ))}
@@ -2624,28 +2673,30 @@ function RewardsPage({
         <div>
           <p className="eyebrow">{c.badges}</p>
           <h2>
-            {rewards.badges.filter((b) => Boolean(b.earned)).length} {c.of}{" "}
+            {rewards.badges.filter((b) => Boolean(b.earned)).length} /{" "}
             {rewards.badges.length} {c.earned}
           </h2>
           <p>{c.badgeHelp}</p>
         </div>
         <div className="badge-grid">
-          {rewards.badges.map((badge) => (
-            <article
+          {rewards.badges.map((badge) => {
+            const copy = badgeCopy[locale][badge.code] || [badge.name, badge.description];
+            const colorName = colorNames[locale][badge.unlockColor] || titleCase(badge.unlockColor);
+            const current = Math.min(badge.currentValue, badge.targetValue);
+            return <article
               className={badge.earned ? "earned" : "locked"}
               key={badge.code}
             >
-              <b>{badge.earned ? "✓" : "○"}</b>
+              <i className="badge-color-dot" style={{ background: colorHex[badge.unlockColor] || "#D8CFAF" }} title={colorName} />
               <div>
-                <h3>{badge.name}</h3>
-                <p>{badge.description}</p>
-                <span>
-                  {Math.min(badge.currentValue, badge.targetValue)} /{" "}
-                  {badge.targetValue} · {titleCase(badge.unlockColor)}
-                </span>
+                <h3>{copy[0]}</h3>
+                <p>{copy[1]}</p>
               </div>
-            </article>
-          ))}
+              <span>
+                {badge.earned ? c.done : current === 0 ? c.notStarted : c.progress} · {current}/{badge.targetValue} · {colorName}
+              </span>
+            </article>;
+          })}
         </div>
       </section>
     </main>
@@ -4331,6 +4382,10 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       equal: "All unlocked species have the same draw chance.",
       badges: "Badges add one new plant color.",
       baseColors: "Available from the start",
+      species: "species",
+      green: "Green",
+      cream: "Cream",
+      colorPlus: "+1",
     },
     ko: {
       eye: "XP, 등급과 식물",
@@ -4343,6 +4398,10 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       equal: "해금된 모든 식물은 동일한 확률로 추첨돼요.",
       badges: "배지는 식물 색상을 하나씩 추가해요.",
       baseColors: "처음부터 사용 가능한 색상",
+      species: "종",
+      green: "초록색",
+      cream: "크림색",
+      colorPlus: "+1 색상",
     },
     zh: {
       eye: "XP、等级和植物",
@@ -4355,6 +4414,10 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       equal: "所有已解锁植物的抽取概率相同。",
       badges: "徽章会增加一种植物颜色。",
       baseColors: "从一开始即可使用的颜色",
+      species: "种",
+      green: "绿色",
+      cream: "奶油色",
+      colorPlus: "+1 颜色",
     },
     ja: {
       eye: "XP・等級・植物",
@@ -4367,6 +4430,10 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       equal: "解放済み植物はすべて同じ確率で抽選されます。",
       badges: "バッジは植物カラーを一つ追加します。",
       baseColors: "最初から利用できるカラー",
+      species: "種類",
+      green: "緑",
+      cream: "クリーム",
+      colorPlus: "+1 色",
     },
   }[locale];
   const plants = [
@@ -4383,6 +4450,30 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
     ["♨", "Palm"],
     ["✦", "Crystal Plant"],
   ];
+  const guidePlantNames: Record<Locale, Record<string, string>> = {
+    en: {},
+    ko: { Oak: "참나무", Cactus: "선인장", Tulip: "튤립", Pine: "소나무", Fern: "고사리", Sunflower: "해바라기", Maple: "단풍나무", Lotus: "연꽃", Bamboo: "대나무", Cherry: "벚나무", Palm: "야자나무", "Crystal Plant": "수정 식물" },
+    zh: { Oak: "橡树", Cactus: "仙人掌", Tulip: "郁金香", Pine: "松树", Fern: "蕨类", Sunflower: "向日葵", Maple: "枫树", Lotus: "莲花", Bamboo: "竹子", Cherry: "樱花树", Palm: "棕榈树", "Crystal Plant": "水晶植物" },
+    ja: { Oak: "オーク", Cactus: "サボテン", Tulip: "チューリップ", Pine: "松", Fern: "シダ", Sunflower: "ひまわり", Maple: "カエデ", Lotus: "蓮", Bamboo: "竹", Cherry: "桜", Palm: "ヤシ", "Crystal Plant": "クリスタル植物" },
+  };
+  const guideGradeNames: Record<Locale, Record<string, string>> = {
+    en: {},
+    ko: { Seed: "씨앗", Sprout: "새싹", Grove: "숲", Gardener: "정원사", Botanist: "식물학자", Conservator: "보존가" },
+    zh: { Seed: "种子", Sprout: "新芽", Grove: "树林", Gardener: "园丁", Botanist: "植物学家", Conservator: "守护者" },
+    ja: { Seed: "種", Sprout: "芽", Grove: "木立", Gardener: "庭師", Botanist: "植物学者", Conservator: "保全者" },
+  };
+  const guideBadgeNames: Record<Locale, Record<string, string>> = {
+    en: {},
+    ko: { Visitor: "방문자", Pixel: "픽셀", Gardener: "정원사", Collector: "수집가", Perfect: "완벽", Notebook: "기록가", "Steady Week": "꾸준한 한 주", "Three Ways": "세 가지 방식", "Long Journey": "긴 여정", "Hundred Pixels": "백 개의 픽셀", "Full Garden": "가득 찬 정원" },
+    zh: { Visitor: "访客", Pixel: "像素", Gardener: "园丁", Collector: "收藏家", Perfect: "完美", Notebook: "记录者", "Steady Week": "稳定一周", "Three Ways": "三种方式", "Long Journey": "漫长旅程", "Hundred Pixels": "百个像素", "Full Garden": "满园" },
+    ja: { Visitor: "訪問者", Pixel: "ピクセル", Gardener: "庭師", Collector: "収集家", Perfect: "パーフェクト", Notebook: "記録家", "Steady Week": "安定した一週間", "Three Ways": "三つの方法", "Long Journey": "長い旅", "Hundred Pixels": "百個のピクセル", "Full Garden": "満開の庭" },
+  };
+  const guideColorNames: Record<Locale, Record<string, string>> = {
+    en: {},
+    ko: { Sky: "하늘색", Orange: "주황색", Violet: "보라색", Rose: "장미색", Gold: "금색", Mint: "민트색", Teal: "청록색", Indigo: "남색", Coral: "코랄색", Ruby: "루비색", Slate: "회청색" },
+    zh: { Sky: "天蓝", Orange: "橙色", Violet: "紫色", Rose: "玫瑰色", Gold: "金色", Mint: "薄荷色", Teal: "蓝绿色", Indigo: "靛蓝", Coral: "珊瑚色", Ruby: "宝石红", Slate: "石板灰" },
+    ja: { Sky: "空色", Orange: "オレンジ", Violet: "紫", Rose: "ローズ", Gold: "ゴールド", Mint: "ミント", Teal: "青緑", Indigo: "藍色", Coral: "コーラル", Ruby: "ルビー", Slate: "スレート" },
+  };
   const grades = [
     ["Seed", 0, 2],
     ["Sprout", 30, 4],
@@ -4478,9 +4569,9 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
           <article key={grade}>
             <header>
               <div>
-                <b>{grade}</b>
+                <b>{guideGradeNames[locale][grade] || grade}</b>
                 <span>
-                  {xp} XP · {count} species
+                  {xp} XP · {count} {c.species}
                 </span>
               </div>
             </header>
@@ -4491,7 +4582,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
                   key={`${grade}-${name}`}
                 >
                   <i>{symbol}</i>
-                  <small>{name}</small>
+                  <small>{guidePlantNames[locale][name] || name}</small>
                 </span>
               ))}
             </div>
@@ -4501,18 +4592,18 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       <h3>{c.badges}</h3>
       <div className="base-color-row">
         <span>{c.baseColors}</span>
-        <b><i style={{ background: "#159651" }} />Green</b>
-        <b><i style={{ background: "#D8CFAF" }} />Cream</b>
+        <b><i style={{ background: "#159651" }} />{c.green}</b>
+        <b><i style={{ background: "#D8CFAF" }} />{c.cream}</b>
       </div>
       <div className="guide-badge-cards">
         {badgeRules.map(([name, rule, color], i) => (
           <article key={name}>
             <i style={{ background: colors[i] }} />
             <div>
-              <b>{name}</b>
+              <b>{guideBadgeNames[locale][name] || name}</b>
               <p>{rule}</p>
             </div>
-            <small>+1 {color}</small>
+            <small>{c.colorPlus} · {guideColorNames[locale][color] || color}</small>
           </article>
         ))}
       </div>

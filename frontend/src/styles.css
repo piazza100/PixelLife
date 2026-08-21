@@ -1982,41 +1982,67 @@ footer b {
 .badge-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-top: 21px;
+  gap: 6px;
+  margin-top: 14px;
 }
 .badge-grid article {
-  display: flex;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  padding: 14px;
+  gap: 7px;
+  min-height: 0;
+  padding: 7px 9px;
   border-radius: 10px;
   background: #f2f1ec;
 }
-.badge-grid article > b {
+.badge-grid article > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.badge-grid article > b,
+.badge-grid .badge-color-dot {
   display: grid;
   place-items: center;
-  flex: 0 0 32px;
-  height: 32px;
+  flex: 0 0 12px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
+}
+.badge-grid article > b {
   background: #262d27;
   color: #e7cf79;
 }
+.badge-grid .badge-color-dot {
+  margin: 0;
+  border: 0;
+  box-shadow: 0 0 0 1px rgba(30, 36, 31, 0.16);
+}
+.badge-grid article.locked .badge-color-dot {
+  filter: saturate(0.55);
+}
 .badge-grid h3 {
   margin: 0;
-  font-size: 10px;
+  font-size: 9px;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 .badge-grid p {
-  margin: 3px 0 0;
+  margin: 0;
+  overflow: hidden;
   color: #858a82;
-  font-size: 8px;
+  font-size: 7px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .badge-grid article span {
   display: inline-block;
-  margin-top: 5px;
+  margin: 0;
   color: #16834a;
   font: 500 7px "DM Mono";
-  text-transform: uppercase;
+  white-space: nowrap;
 }
 .garden-tabs {
   display: flex;
@@ -3176,28 +3202,40 @@ header {
   display: grid;
   grid-template-columns: 16px 1fr auto;
   align-items: center;
-  gap: 10px;
-  padding: 12px;
+  gap: 7px;
+  min-height: 0;
+  padding: 7px 9px;
   border-radius: 10px;
   background: #f3f2ed;
 }
 .guide-badge-cards i {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
 }
 .guide-badge-cards b {
   font-size: 9px;
+  white-space: nowrap;
+}
+.guide-badge-cards article > div {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 6px;
 }
 .guide-badge-cards p {
-  margin: 3px 0 0;
+  margin: 0;
+  overflow: hidden;
   color: #777c75;
   font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .guide-badge-cards small {
   color: #16834a;
   font-size: 7px;
   font-weight: 800;
+  white-space: nowrap;
 }
 @media (max-width: 760px) {
   .guide-progress {
@@ -3561,9 +3599,6 @@ body[data-board-type="check"] .calendar-grid button.done.level-0:before {
   .language select {
     min-width: 66px;
   }
-}
-.badge-grid article.locked {
-  display: none;
 }
 .badge-grid:empty:before {
   content: "No badges yet. Keep adding small days.";
