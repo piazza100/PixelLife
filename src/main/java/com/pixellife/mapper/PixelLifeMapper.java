@@ -44,9 +44,6 @@ public interface PixelLifeMapper {
     @Select("SELECT COUNT(*) FROM boards WHERE user_id=#{userId} AND status='ACTIVE'")
     int countActiveBoards(Long userId);
 
-    @Select("SELECT id FROM boards WHERE user_id=#{userId} AND status='ACTIVE' ORDER BY COALESCE(last_recorded_at,created_at) DESC,id DESC LIMIT 1")
-    Long findWritableBoardId(Long userId);
-
     @Insert("INSERT IGNORE INTO daily_visits(user_id, visit_date) VALUES(#{userId}, #{date})")
     void recordVisit(Long userId, LocalDate date);
 

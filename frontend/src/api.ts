@@ -12,7 +12,7 @@ export type RewardColor = {code:string;cssColor:string;sortOrder:number}
 export type RewardGrade = {code:string;xp:number;species:number}
 export type RewardData = {totalXp:number;gradeCode:string;badges:RewardBadge[];plants:RewardPlant[];speciesPool:RewardSpecies[];unlockedColors:RewardColor[];gradeGuide:RewardGrade[]}
 
-export type Member = {id:number;email:string;displayName:string;avatarUrl?:string;effectivePlan:'FREE'|'PLUS';activeBoardLimit:1|30;writableBoardId:number|null}
+export type Member = {id:number;email:string;displayName:string;avatarUrl?:string;effectivePlan:'FREE'|'PLUS';activeBoardLimit:3}
 
 let csrfToken=''
 // Web and API always share the browser origin. Vite proxies locally and

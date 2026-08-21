@@ -40,8 +40,7 @@ public class PixelLifeService {
     public Map<String,Object> member(long userId) {
         Map<String,Object> result = new HashMap<>(mapper.findMember(userId));
         result.put("effectivePlan", isPlus(result) ? "PLUS" : "FREE");
-        result.put("activeBoardLimit", isPlus(result) ? 30 : 1);
-        result.put("writableBoardId", mapper.findWritableBoardId(userId));
+        result.put("activeBoardLimit", 3);
         return result;
     }
 
@@ -61,7 +60,7 @@ public class PixelLifeService {
     public BoardRow createBoard(long userId, String name, String type, LocalDate startDate, Integer goalDays) {
         mapper.lockMember(userId);
         Map<String,Object> account = mapper.findMember(userId);
-        int limit = isPlus(account) ? 30 : 1;
+        int limit = 3;
         if (mapper.countActiveBoards(userId) >= limit) throw new IllegalStateException("Your plan allows " + limit + " active board" + (limit == 1 ? "" : "s"));
         String boardType = switch (type == null ? "" : type.toUpperCase(Locale.ROOT)) {
             case "LEVEL", "CHECK", "MOOD" -> type.toUpperCase(Locale.ROOT);
@@ -79,7 +78,6 @@ public class PixelLifeService {
 
     @Transactional
     public BoardRow importGuestBoard(long userId, String name, String type, LocalDate startDate, Integer goalDays, List<GuestEntry> entries) {
-        if (mapper.countActiveBoards(userId) > 0) throw new IllegalStateException("Finish your current board before importing a guest board");
         BoardRow board = createBoard(userId, name, type, startDate, goalDays);
         for (GuestEntry entry : entries) {
             saveEntry(userId, board.getId(), entry.date(), entry.value(), entry.success(), entry.emoji(), entry.note());
@@ -209,10 +207,8 @@ public class PixelLifeService {
     }
 
     private void requireWritable(long userId, long boardId) {
-        Map<String,Object> account = mapper.findMember(userId);
-        if (isPlus(account)) return;
-        Long writable = mapper.findWritableBoardId(userId);
-        if (writable != null && writable != boardId) throw new IllegalStateException("This board is read-only on the Free plan");
+        // Existing active boards stay writable after a Plus subscription ends.
+        // The shared three-board limit is enforced only when a new board is created.
     }
 
     private boolean isPlus(Map<String,Object> account) {

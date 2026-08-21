@@ -21,7 +21,6 @@ class PixelLifeServiceTest {
     @BeforeEach
     void memberDefaults() {
         when(mapper.findMember(1L)).thenReturn(Map.of("plan", "FREE"));
-        when(mapper.findWritableBoardId(1L)).thenReturn(10L);
     }
 
     @Test
@@ -36,6 +35,44 @@ class PixelLifeServiceTest {
         order.verify(mapper).findMember(1L);
         order.verify(mapper).countActiveBoards(1L);
         verify(mapper).insertBoard(any(BoardRow.class));
+    }
+
+    @Test
+    void freeMemberCanKeepThreeActiveBoardsButNotFour() {
+        when(mapper.countActiveBoards(1L)).thenReturn(2, 3);
+        when(mapper.findBoards(1L)).thenReturn(List.of());
+
+        service.createBoard(1L, "Third", "LEVEL", LocalDate.now(), 30);
+
+        assertThatThrownBy(() -> service.createBoard(1L, "Fourth", "LEVEL", LocalDate.now(), 30))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Your plan allows 3 active boards");
+        verify(mapper, times(1)).insertBoard(any(BoardRow.class));
+    }
+
+    @Test
+    void plusMemberAlsoUsesTheThreeActiveBoardLimit() {
+        when(mapper.findMember(1L)).thenReturn(Map.of(
+            "plan", "PLUS",
+            "paidUntil", LocalDateTime.now().plusDays(10)
+        ));
+        when(mapper.countActiveBoards(1L)).thenReturn(3);
+
+        assertThatThrownBy(() -> service.createBoard(1L, "Fourth", "MOOD", LocalDate.now(), 30))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Your plan allows 3 active boards");
+        verify(mapper, never()).insertBoard(any(BoardRow.class));
+    }
+
+    @Test
+    void freeMemberCanKeepWritingExistingBoardsAfterPlusEnds() {
+        BoardRow oldBoard = board(LocalDate.now().minusDays(10), LocalDateTime.now().minusDays(10), 30);
+        oldBoard.setId(9L);
+        when(mapper.findBoard(9L, 1L)).thenReturn(oldBoard);
+
+        service.saveEntry(1L, 9L, LocalDate.now(), 3, null, null, null);
+
+        verify(mapper).upsertEntry(9L, LocalDate.now(), 3, null, null, null);
     }
 
     @Test
