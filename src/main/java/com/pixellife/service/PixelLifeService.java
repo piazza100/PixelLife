@@ -26,7 +26,6 @@ public class PixelLifeService {
         member.put("email", email); member.put("displayName", displayName); member.put("avatarUrl", avatarUrl); member.put("locale", safeLocale(locale));
         mapper.insertMember(member);
         long id = ((Number) member.get("id")).longValue();
-        mapper.recordVisit(id, LocalDate.now());
         return id;
     }
 
@@ -34,6 +33,12 @@ public class PixelLifeService {
         Long id = mapper.findMemberId("GOOGLE", subject);
         if (id == null) throw new NoSuchElementException("Account not found");
         return id;
+    }
+
+    @Transactional
+    public long resolveOrCreateMember(String subject, String email, String locale) {
+        Long id = mapper.findMemberId("GOOGLE", subject);
+        return id != null ? id : ensureMember(subject, email, null, null, locale);
     }
 
     public Map<String,Object> member(long userId) {
@@ -54,7 +59,7 @@ public class PixelLifeService {
     @Transactional(readOnly = true)
     public Map<String, Object> bootstrap(long userId) {
         Map<String,Object> account = member(userId);
-        return Map.of("member", account, "boards", mapper.findBoards(userId), "entries", mapper.findEntriesForUser(userId));
+        return Map.of("member", account, "boards", mapper.findBoards(userId));
     }
 
     @Transactional
@@ -203,7 +208,13 @@ public class PixelLifeService {
 
     @Transactional
     public Map<String, Object> rewards(long userId) {
+        mapper.recordVisit(userId, LocalDate.now());
         return rewards(userId, member(userId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> entries(long userId) {
+        return mapper.findEntriesForUser(userId);
     }
 
     private Map<String,Object> rewards(long userId, Map<String,Object> account) {

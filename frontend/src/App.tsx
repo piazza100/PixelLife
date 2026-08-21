@@ -1043,12 +1043,7 @@ function App() {
             fromApiBoard(b, entriesByBoard.get(b.id) || []),
           );
         } else {
-          const details = await Promise.all(
-            data.boards.map((b) => pixelLifeApi.getBoard(b.id)),
-          );
-          loaded = details.map((detail) =>
-            fromApiBoard(detail.board, detail.entries),
-          );
+          loaded = data.boards.map((b) => fromApiBoard(b, []));
         }
         if (!alive) return;
         retryCount = 0;
@@ -1070,12 +1065,28 @@ function App() {
         setSelected((v) =>
           loaded.some((b) => b.id === v) ? v : loaded[0]?.id || "",
         );
+        if (!Array.isArray(data.entries))
+          pixelLifeApi
+            .entries()
+            .then((entries) => {
+              if (!alive) return;
+              const entriesByBoard = new Map<number, typeof entries>();
+              entries.forEach((entry) => {
+                const boardEntries = entriesByBoard.get(entry.boardId) || [];
+                boardEntries.push(entry);
+                entriesByBoard.set(entry.boardId, boardEntries);
+              });
+              setBoards(
+                data.boards.map((item) =>
+                  fromApiBoard(item, entriesByBoard.get(item.id) || []),
+                ),
+              );
+            })
+            .catch((error) =>
+              console.error("PixelLife entries load failed", error),
+            );
       } catch (error) {
         if (!alive) return;
-        setMember(null);
-        setRewards(null);
-        setBoards(guest);
-        setSelected(guest[0]?.id || "");
         if (error instanceof ApiError && error.status !== 0)
           setNotice((current) =>
             current === extraWords[locale].serverWaking ? "" : current,
@@ -1085,8 +1096,14 @@ function App() {
           if (retryCount < 5) {
             retryCount += 1;
             retryTimer = window.setTimeout(load, 2500);
+            return;
           }
-        } else if (!(error instanceof ApiError && error.status === 401)) {
+        }
+        setMember(null);
+        setRewards(null);
+        setBoards(guest);
+        setSelected(guest[0]?.id || "");
+        if (!(error instanceof ApiError && error.status === 401)) {
           console.error("PixelLife initial load failed", error);
           setNotice(actionWords[locale].accountLoadError);
         }
@@ -1413,24 +1430,28 @@ function App() {
                 aria-label={actionWords[locale].badgeListLabel}
                 onClick={() => navigate("rewards", true)}
               >
+                <strong className="grade-chip">
+                  {rewards?.gradeCode || "SEED"}
+                </strong>
                 <span>
                   <small>{actionWords[locale].growthLabel}</small>
-                  <strong>
-                    {rewards?.gradeCode || "SEED"} · {rewards?.totalXp || 0} XP
-                  </strong>
+                  <b>{rewards?.totalXp || 0} XP</b>
                 </span>
                 <em>
                   {rewards?.badges.filter((b) => Boolean(b.earned)).length || 0}{" "}
                   {actionWords[locale].badgeUnit}
                 </em>
-                <i aria-hidden="true">›</i>
+                <i className="reward-arrow" aria-hidden="true">›</i>
               </button>
               <b>{member.effectivePlan}</b>
               <button
                 className="account-link"
+                aria-label={t.account}
+                title={t.account}
                 onClick={() => navigate("account", true)}
               >
-                {t.account}
+                <span className="account-icon" aria-hidden="true" />
+                <span className="sr-only">{t.account}</span>
               </button>
             </>
           ) : (
@@ -1445,10 +1466,10 @@ function App() {
               value={locale}
               onChange={(e) => setLocale(e.target.value as Locale)}
             >
-              <option value="en">🇺🇸 English</option>
-              <option value="ko">🇰🇷 한국어</option>
-              <option value="zh">🇨🇳 中文</option>
-              <option value="ja">🇯🇵 日本語</option>
+              <option value="en">🇺🇸 EN</option>
+              <option value="ko">🇰🇷 KO</option>
+              <option value="zh">🇨🇳 ZH</option>
+              <option value="ja">🇯🇵 JA</option>
             </select>
           </label>
         </div>
@@ -1958,7 +1979,7 @@ function AccountPage({
       </button>
       <section>
         <p className="eyebrow">{c.account}</p>
-        <h1>{member.displayName}</h1>
+        <h1>{c.account}</h1>
         <p>{member.email}</p>
         <div className="account-plan">
           <span>{c.plan}</span>

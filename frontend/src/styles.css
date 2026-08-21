@@ -16,6 +16,17 @@ button,
 input {
   font: inherit;
 }
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
 button {
   cursor: pointer;
 }
@@ -2233,11 +2244,14 @@ footer b {
   text-align: center;
 }
 .account-link {
-  width: auto !important;
-  height: auto !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: none !important;
+  display: grid !important;
+  width: 34px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  place-items: center;
+  border: 1px solid #dedbd2 !important;
+  border-radius: 9px !important;
+  background: #fff !important;
   color: #555b54;
   font-size: 9px;
   font-weight: 800;
@@ -2538,7 +2552,7 @@ body[data-board-type="mood"] .calendar-key {
 .reward-status {
   display: flex !important;
   width: auto !important;
-  min-width: 205px;
+  min-width: 230px;
   height: auto !important;
   min-height: 42px;
   align-items: center;
@@ -2576,10 +2590,28 @@ body[data-board-type="mood"] .calendar-key {
   white-space: nowrap;
 }
 .reward-status i {
-  color: #159651;
   font-style: normal;
-  font-size: 18px;
   line-height: 1;
+}
+.reward-status .grade-chip {
+  flex: 0 0 auto;
+  padding: 7px 8px;
+  border-radius: 8px;
+  background: #d9efe0;
+  color: #147a45;
+  font: 700 8px "DM Mono";
+  letter-spacing: 0.5px;
+}
+.reward-status span b {
+  padding: 0;
+  background: transparent;
+  color: #155b34;
+  font: 700 10px "DM Mono";
+  letter-spacing: 0;
+}
+.reward-status .reward-arrow {
+  color: #159651;
+  font-size: 18px;
 }
 .guide-samples {
   width: min(980px, calc(100% - 36px));
@@ -3435,46 +3467,89 @@ body[data-board-type="check"] .calendar-grid button.done.level-0:before {
   outline: 3px solid #a8dfbb;
   outline-offset: 2px;
 }
+.account-icon {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+.account-icon:before,
+.account-icon:after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 1.7px solid currentColor;
+}
+.account-icon:before {
+  top: 1px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.account-icon:after {
+  bottom: 1px;
+  width: 12px;
+  height: 7px;
+  border-radius: 8px 8px 3px 3px;
+}
 @media (max-width: 760px) {
   header {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: start;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 10px 8px;
+    align-items: center;
+    padding: 11px 14px 13px;
   }
   .brand {
-    margin-top: 4px;
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
   }
   .plan {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    width: min(100%, 330px);
-    margin-left: auto;
-    align-items: center;
-    justify-content: stretch;
+    display: contents;
   }
   .plan > .account-link,
   .plan > .login-button {
-    grid-column: 1;
-    grid-row: 1;
-    justify-self: end;
-  }
-  .plan > .language {
     grid-column: 2;
     grid-row: 1;
     justify-self: end;
   }
+  .plan > .language {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
   .plan > .reward-status {
-    grid-column: 1 / -1;
+    grid-column: 1 / 4;
     grid-row: 2;
     width: 100% !important;
     min-width: 0;
-    margin-top: 2px;
+    min-height: 50px;
+    margin: 0;
+    padding: 7px 10px !important;
   }
   .plan > b {
     display: none;
   }
+  .account-link {
+    display: grid !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-height: 32px !important;
+    padding: 0 !important;
+    place-items: center;
+    border: 1px solid #dedbd2 !important;
+    border-radius: 9px !important;
+    background: #fff !important;
+    color: #4e554f !important;
+  }
+  .language {
+    height: 34px;
+    padding: 2px 7px;
+  }
   .language select {
-    min-width: 88px;
+    min-width: 66px;
   }
 }
 .badge-grid article.locked {
