@@ -1,5 +1,6 @@
 export type ApiBoard = {
   id:number; name:string; boardType:'LEVEL'|'CHECK'|'MOOD'; color:string; startDate:string;
+  rewardSpeciesCode:string; rewardSpeciesName:string; rewardSpeciesSymbol:string; rewardColorCode:string;
   goalDays:number|null; endedAt:string|null; status:'ACTIVE'|'COMPLETED'; finalScore:number|null; xpAwarded:number; createdAt:string
 }
 export type ApiEntry = {entryDate:string;numericValue:number|null;success:boolean|null;emoji:string|null;note:string|null}

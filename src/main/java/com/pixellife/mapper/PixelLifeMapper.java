@@ -50,13 +50,13 @@ public interface PixelLifeMapper {
     @Insert("INSERT IGNORE INTO daily_visits(user_id, visit_date) VALUES(#{userId}, #{date})")
     void recordVisit(Long userId, LocalDate date);
 
-    @Select("SELECT id,user_id,name,board_type,color,start_date,goal_days,status,ended_at,completed_at,final_score,xp_awarded,created_at FROM boards WHERE user_id=#{userId} ORDER BY created_at DESC, id DESC")
+    @Select("SELECT b.id,b.user_id,b.name,b.board_type,b.color,b.reward_species_code,b.reward_color_code,s.name AS reward_species_name,s.unicode_symbol AS reward_species_symbol,b.start_date,b.goal_days,b.status,b.ended_at,b.completed_at,b.final_score,b.xp_awarded,b.created_at FROM boards b JOIN plant_species s ON s.code=b.reward_species_code WHERE b.user_id=#{userId} ORDER BY b.created_at DESC, b.id DESC")
     List<BoardRow> findBoards(Long userId);
 
-    @Select("SELECT id,user_id,name,board_type,color,start_date,goal_days,status,ended_at,completed_at,final_score,xp_awarded,created_at FROM boards WHERE id=#{id} AND user_id=#{userId}")
+    @Select("SELECT b.id,b.user_id,b.name,b.board_type,b.color,b.reward_species_code,b.reward_color_code,s.name AS reward_species_name,s.unicode_symbol AS reward_species_symbol,b.start_date,b.goal_days,b.status,b.ended_at,b.completed_at,b.final_score,b.xp_awarded,b.created_at FROM boards b JOIN plant_species s ON s.code=b.reward_species_code WHERE b.id=#{id} AND b.user_id=#{userId}")
     BoardRow findBoard(Long id, Long userId);
 
-    @Insert("INSERT INTO boards(user_id,name,board_type,color,start_date,goal_days,ended_at,status) VALUES(#{userId},#{name},#{boardType},#{color},#{startDate},#{goalDays},#{endedAt},'ACTIVE')")
+    @Insert("INSERT INTO boards(user_id,name,board_type,color,reward_species_code,reward_color_code,start_date,goal_days,ended_at,status) VALUES(#{userId},#{name},#{boardType},#{color},#{rewardSpeciesCode},#{rewardColorCode},#{startDate},#{goalDays},#{endedAt},'ACTIVE')")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertBoard(BoardRow board);
 
@@ -106,6 +106,8 @@ public interface PixelLifeMapper {
     @Select("SELECT COUNT(*) FROM boards WHERE user_id=#{userId} AND status='COMPLETED' AND goal_days>=90") int countLongBoards(Long userId);
     @Select("SELECT COUNT(*) FROM plants WHERE user_id=#{userId}") int nextPlantIndex(Long userId);
     @Select("SELECT code,name,unicode_symbol AS symbol,weight_value AS weightValue,unlock_grade AS unlockGrade,sort_order AS sortOrder FROM plant_species WHERE sort_order<=#{limit} ORDER BY sort_order") List<Map<String,Object>> findSpeciesPool(int limit);
+    @Select("SELECT code,name,unicode_symbol AS symbol,weight_value AS weightValue FROM plant_species WHERE code=#{code}") Map<String,Object> findSpecies(String code);
+    @Select("SELECT code,css_color AS cssColor,sort_order AS sortOrder FROM plant_colors WHERE code=#{code}") Map<String,Object> findColor(String code);
     @Select("SELECT c.code,c.css_color AS cssColor,c.sort_order AS sortOrder FROM plant_colors c WHERE c.unlock_badge IS NULL OR EXISTS(SELECT 1 FROM user_badges ub WHERE ub.user_id=#{userId} AND ub.badge_code=c.unlock_badge) ORDER BY c.sort_order") List<Map<String,Object>> findUnlockedColors(Long userId);
 
     @Select("SELECT d.code,d.name,d.description,d.metric_code AS metricCode,d.target_value AS targetValue,d.unlock_color AS unlockColor,(ub.badge_code IS NOT NULL) AS earned FROM badge_definitions d LEFT JOIN user_badges ub ON ub.badge_code=d.code AND ub.user_id=#{userId} WHERE d.active=TRUE ORDER BY d.sort_order")

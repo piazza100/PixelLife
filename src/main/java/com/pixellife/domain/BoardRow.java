@@ -9,6 +9,10 @@ public class BoardRow {
     private String name;
     private String boardType;
     private String color;
+    private String rewardSpeciesCode;
+    private String rewardSpeciesName;
+    private String rewardSpeciesSymbol;
+    private String rewardColorCode;
     private LocalDate startDate;
     private Integer goalDays;
     private String status;
@@ -28,6 +32,14 @@ public class BoardRow {
     public void setBoardType(String boardType) { this.boardType = boardType; }
     public String getColor() { return color; }
     public void setColor(String color) { this.color = color; }
+    public String getRewardSpeciesCode() { return rewardSpeciesCode; }
+    public void setRewardSpeciesCode(String rewardSpeciesCode) { this.rewardSpeciesCode = rewardSpeciesCode; }
+    public String getRewardSpeciesName() { return rewardSpeciesName; }
+    public void setRewardSpeciesName(String rewardSpeciesName) { this.rewardSpeciesName = rewardSpeciesName; }
+    public String getRewardSpeciesSymbol() { return rewardSpeciesSymbol; }
+    public void setRewardSpeciesSymbol(String rewardSpeciesSymbol) { this.rewardSpeciesSymbol = rewardSpeciesSymbol; }
+    public String getRewardColorCode() { return rewardColorCode; }
+    public void setRewardColorCode(String rewardColorCode) { this.rewardColorCode = rewardColorCode; }
     public LocalDate getStartDate() { return startDate; }
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
     public Integer getGoalDays() { return goalDays; }

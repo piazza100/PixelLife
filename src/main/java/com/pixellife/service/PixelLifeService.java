@@ -13,7 +13,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class PixelLifeService {
-    static final List<String> COLORS = List.of("#159651", "#4F8FD8", "#D6763E", "#8967C7", "#C85F7A", "#2F8C83", "#5666A5", "#D96F62");
     private final PixelLifeMapper mapper;
     private final BoardScoringService scoring;
 
@@ -70,8 +69,15 @@ public class PixelLifeService {
         if (goalDays != null && (goalDays < 3 || goalDays > 3650)) throw new IllegalArgumentException("Goal days must be between 3 and 3650");
         LocalDate safeStartDate = startDate == null ? LocalDate.now() : startDate;
         if (safeStartDate.isAfter(LocalDate.now())) throw new IllegalArgumentException("Start date cannot be in the future");
+        Map<String,Object> progress = mapper.findProgress(userId);
+        String currentGrade = grade(number(progress.get("totalXp")));
+        Map<String,Object> species = weightedPick(mapper.findSpeciesPool(poolLimit(currentGrade)));
+        List<Map<String,Object>> unlockedColors = mapper.findUnlockedColors(userId);
+        Map<String,Object> plantColor = unlockedColors.get(ThreadLocalRandom.current().nextInt(unlockedColors.size()));
         BoardRow board = new BoardRow(); board.setUserId(userId); board.setName(name.trim()); board.setBoardType(boardType);
-        board.setColor(randomColor(userId)); board.setStartDate(safeStartDate); board.setGoalDays(goalDays); board.setStatus("ACTIVE");
+        board.setRewardSpeciesCode(String.valueOf(species.get("code"))); board.setRewardSpeciesName(String.valueOf(species.get("name"))); board.setRewardSpeciesSymbol(String.valueOf(species.get("symbol")));
+        board.setRewardColorCode(String.valueOf(plantColor.get("code"))); board.setColor(String.valueOf(plantColor.get("cssColor")));
+        board.setStartDate(safeStartDate); board.setGoalDays(goalDays); board.setStatus("ACTIVE");
         if (goalDays != null) board.setEndedAt(board.getStartDate().plusDays(goalDays - 1L));
         mapper.insertBoard(board); return board;
     }
@@ -186,9 +192,8 @@ public class PixelLifeService {
         if (awardedXp > 0) mapper.addXp(userId, awardedXp);
         int totalXp = number(mapper.findProgress(userId).get("totalXp"));
         String grade = grade(totalXp); mapper.updateGrade(userId, grade);
-        Map<String,Object> plantSpecies = weightedPick(mapper.findSpeciesPool(poolLimit(grade)));
-        List<Map<String,Object>> colors = mapper.findUnlockedColors(userId);
-        Map<String,Object> plantColor = colors.get(ThreadLocalRandom.current().nextInt(colors.size()));
+        Map<String,Object> plantSpecies = mapper.findSpecies(board.getRewardSpeciesCode());
+        Map<String,Object> plantColor = mapper.findColor(board.getRewardColorCode());
         int index = mapper.nextPlantIndex(userId);
         mapper.insertPlant(userId, boardId, String.valueOf(plantSpecies.get("code")), String.valueOf(plantColor.get("code")), index % 12, index / 12);
         refreshRewards(userId);
@@ -218,11 +223,6 @@ public class PixelLifeService {
         if (account == null || !"PLUS".equals(String.valueOf(account.get("plan")))) return false;
         Object paidUntil = account.get("paidUntil");
         return paidUntil instanceof LocalDateTime time && !time.isBefore(LocalDateTime.now(ZoneOffset.UTC));
-    }
-
-    private String randomColor(long userId) {
-        List<BoardRow> boards = mapper.findBoards(userId); String last = boards.isEmpty() ? null : boards.get(0).getColor();
-        List<String> choices = COLORS.stream().filter(c -> !c.equals(last)).toList(); return choices.get(ThreadLocalRandom.current().nextInt(choices.size()));
     }
 
     private void refreshRewards(long userId) {

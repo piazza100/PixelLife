@@ -21,6 +21,15 @@ class PixelLifeServiceTest {
     @BeforeEach
     void memberDefaults() {
         when(mapper.findMember(1L)).thenReturn(Map.of("plan", "FREE"));
+        when(mapper.findProgress(1L)).thenReturn(Map.of("totalXp", 0, "gradeCode", "SEED"));
+        when(mapper.findSpeciesPool(2)).thenReturn(List.of(
+            Map.of("code", "OAK", "name", "Oak", "symbol", "♣", "weightValue", 1),
+            Map.of("code", "CACTUS", "name", "Cactus", "symbol", "♜", "weightValue", 1)
+        ));
+        when(mapper.findUnlockedColors(1L)).thenReturn(List.of(
+            Map.of("code", "GREEN", "cssColor", "#159651"),
+            Map.of("code", "CREAM", "cssColor", "#D8CFAF")
+        ));
     }
 
     @Test
