@@ -39,7 +39,7 @@ class DatabaseWorkflowIntegrationTest {
         service.fillTestEntries(userId, first.getId(), start, LocalDate.now());
         Map<String, Object> completion = service.complete(userId, first.getId());
         assertThat(completion.get("score")).isEqualTo(100);
-        assertThat(completion.get("xp")).isEqualTo(100);
+        assertThat(completion.get("xp")).isEqualTo(3);
         @SuppressWarnings("unchecked") Map<String, Object> completedSpecies = (Map<String, Object>) completion.get("species");
         @SuppressWarnings("unchecked") Map<String, Object> completedColor = (Map<String, Object>) completion.get("color");
         assertThat(completedSpecies.get("code")).isEqualTo(first.getRewardSpeciesCode());
@@ -49,8 +49,8 @@ class DatabaseWorkflowIntegrationTest {
         assertThat(count("SELECT COUNT(*) FROM boards WHERE user_id=? AND status='ACTIVE'", userId)).isEqualTo(3);
         assertThat(count("SELECT COUNT(*) FROM boards WHERE user_id=? AND status='COMPLETED'", userId)).isEqualTo(1);
         assertThat(count("SELECT COUNT(*) FROM plants WHERE user_id=?", userId)).isEqualTo(1);
-        assertThat(count("SELECT total_xp FROM users WHERE id=?", userId)).isEqualTo(100);
-        assertThat(jdbcTemplate.queryForObject("SELECT grade_code FROM users WHERE id=?", String.class, userId)).isEqualTo("SPROUT");
+        assertThat(count("SELECT total_xp FROM users WHERE id=?", userId)).isEqualTo(3);
+        assertThat(jdbcTemplate.queryForObject("SELECT grade_code FROM users WHERE id=?", String.class, userId)).isEqualTo("SEED");
     }
 
     @Test

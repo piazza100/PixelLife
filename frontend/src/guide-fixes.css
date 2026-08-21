@@ -1,17 +1,28 @@
-.guide-reward-combined .guide-badge-cards::before {
-  content: 'Base colors  ● Green   ● Cream  ·  Available from the start';
-  grid-column: 1 / -1;
-  padding: 12px;
-  border-radius: 10px;
-  background: linear-gradient(90deg, #159651 0 14px, transparent 14px 104px, #d8cfaf 104px 118px, transparent 118px), #f3f2ed;
-  color: #20251f;
-  font-size: 9px;
-  font-weight: 800;
-  text-indent: 20px;
-}
-html[lang='ko'] .guide-reward-combined .guide-badge-cards::before { content: '기본 색상  ● Green   ● Cream  ·  처음부터 사용 가능'; }
-html[lang='zh'] .guide-reward-combined .guide-badge-cards::before { content: '基础颜色  ● Green   ● Cream  ·  从一开始即可使用'; }
-html[lang='ja'] .guide-reward-combined .guide-badge-cards::before { content: '基本カラー  ● Green   ● Cream  ·  最初から利用可能'; }
-
 html, body, .app { overscroll-behavior-x: none; }
 .calendar-card { touch-action: pan-y; overscroll-behavior: contain; }
+
+.base-color-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f3f2ed;
+}
+.base-color-row > span { margin-right: auto; color: #626861; font-size: 9px; font-weight: 800; }
+.base-color-row b { display: inline-flex; align-items: center; gap: 7px; font-size: 8px; }
+.base-color-row i {
+  width: 16px;
+  height: 16px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #c9c5b9;
+}
+
+@media (max-width: 760px) {
+  .help-nav { background: #e8f4eb; border: 1px solid #cde7d5; }
+  .help-nav button { color: #23613c; }
+  .base-color-row > span { flex-basis: 100%; }
+}

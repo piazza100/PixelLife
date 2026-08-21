@@ -188,8 +188,7 @@ public class PixelLifeService {
         int elapsed = (int) (LocalDate.now().toEpochDay() - board.getStartDate().toEpochDay()) + 1;
         int goal = board.getGoalDays() == null ? elapsed : board.getGoalDays();
         BoardScoringService.Score result = scoring.score(goal, mapper.countEntries(boardId), mapper.countNotes(boardId));
-        int remainingDailyXp = Math.max(0, 100 - mapper.sumXpAwardedOnDate(userId, LocalDate.now(ZoneOffset.UTC)));
-        int awardedXp = Math.min(result.xp(), remainingDailyXp);
+        int awardedXp = result.xp();
         if (mapper.completeBoard(boardId, userId, result.points(), awardedXp) != 1) throw new IllegalStateException("Board could not be completed");
         if (awardedXp > 0) mapper.addXp(userId, awardedXp);
         int totalXp = number(mapper.findProgress(userId).get("totalXp"));

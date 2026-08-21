@@ -10,16 +10,18 @@ class BoardScoringServiceTest {
     @Test void perfectBoardGetsOneHundredPoints() {
         var result = scoring.score(30, 30, 6);
         assertThat(result.points()).isEqualTo(100);
-        assertThat(result.xp()).isEqualTo(100);
+        assertThat(result.xp()).isEqualTo(30);
     }
 
     @Test void scoreIsCappedAtOneHundred() {
-        assertThat(scoring.score(30, 50, 50).points()).isEqualTo(100);
+        var result = scoring.score(30, 50, 50);
+        assertThat(result.points()).isEqualTo(100);
+        assertThat(result.xp()).isEqualTo(30);
     }
 
     @Test void partialBoardKeepsSimpleProportionalScore() {
         var result = scoring.score(30, 15, 0);
         assertThat(result.points()).isEqualTo(50);
-        assertThat(result.xp()).isEqualTo(50);
+        assertThat(result.xp()).isEqualTo(15);
     }
 }

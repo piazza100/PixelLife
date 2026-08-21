@@ -73,8 +73,12 @@ class DatabaseIntegrityTest {
             SELECT COUNT(*) FROM boards
             WHERE status='COMPLETED' AND (
               completed_at IS NULL OR final_score IS NULL OR
-              final_score < 0 OR final_score > 100 OR
-              xp_awarded < 0 OR xp_awarded > final_score
+              final_score < 0 OR final_score > 100 OR xp_awarded < 0 OR
+              xp_awarded <> LEAST(
+                (SELECT COUNT(*) FROM pixel_entries e WHERE e.board_id=boards.id),
+                CASE WHEN goal_days IS NOT NULL THEN GREATEST(goal_days,1)
+                     ELSE GREATEST(DATEDIFF(DATE(completed_at),start_date)+1,1) END
+              )
             )
             """);
         assertZero("reward on active board", """

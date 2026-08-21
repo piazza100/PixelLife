@@ -142,7 +142,7 @@ class PixelLifeServiceTest {
         when(mapper.findBoard(10L, 1L)).thenReturn(board);
         when(mapper.countEntries(10L)).thenReturn(7);
         when(mapper.countNotes(10L)).thenReturn(2);
-        when(mapper.completeBoard(10L, 1L, 100, 100)).thenReturn(0);
+        when(mapper.completeBoard(10L, 1L, 100, 7)).thenReturn(0);
 
         assertThatThrownBy(() -> service.complete(1L, 10L))
             .isInstanceOf(IllegalStateException.class)
