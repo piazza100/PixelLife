@@ -101,8 +101,8 @@ public interface PixelLifeMapper {
     @Select("SELECT COUNT(*) FROM pixel_entries WHERE board_id=#{boardId} AND note IS NOT NULL AND note <> ''")
     int countNotes(Long boardId);
 
-    @Update("UPDATE boards SET status='COMPLETED',completed_at=CURRENT_TIMESTAMP,final_score=#{score},xp_awarded=#{xp},ended_at=CURRENT_DATE WHERE id=#{boardId} AND user_id=#{userId} AND status='ACTIVE'")
-    int completeBoard(Long boardId, Long userId, int score, int xp);
+    @Update("UPDATE boards SET status='COMPLETED',completed_at=CURRENT_TIMESTAMP,final_score=#{score},xp_awarded=#{xp},ended_at=#{completedOn} WHERE id=#{boardId} AND user_id=#{userId} AND status='ACTIVE'")
+    int completeBoard(Long boardId, Long userId, int score, int xp, LocalDate completedOn);
 
     @Insert("INSERT IGNORE INTO plants(user_id,board_id,season_code,species_code,color_code,variant_code,map_x,map_y,reward_rule_version) VALUES(#{userId},#{boardId},'NONE',#{species},#{color},'STANDARD',#{mapX},#{mapY},2)")
     void insertPlant(Long userId, Long boardId, String species, String color, int mapX, int mapY);

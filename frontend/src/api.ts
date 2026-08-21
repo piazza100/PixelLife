@@ -55,7 +55,7 @@ export const pixelLifeApi={
   saveEntry:(id:number,date:string,body:{value?:number;success?:boolean;emoji?:string;note?:string})=>request<void>(`/boards/${id}/entries/${date}`,{method:'PUT',body:JSON.stringify(body)}),
   resetToday:(id:number,date:string)=>request<void>(`/boards/${id}/entries/${date}`,{method:'DELETE'}),
   deleteBoard:(id:number)=>request<void>(`/boards/${id}`,{method:'DELETE'}),
-  completeBoard:(id:number)=>request<{score:number;xp:number;grade:string;species:unknown;color:unknown}>(`/boards/${id}/complete`,{method:'POST'}),
+  completeBoard:(id:number,date:string)=>request<{score:number;xp:number;grade:string;species:unknown;color:unknown}>(`/boards/${id}/complete?date=${date}`,{method:'POST'}),
   rewards:()=>request<RewardData>('/rewards')
   ,createPlusCheckout:()=>request<{url:string}>('/billing/checkout',{method:'POST'})
   ,createCustomerPortal:()=>request<{url:string}>('/billing/portal',{method:'POST'})

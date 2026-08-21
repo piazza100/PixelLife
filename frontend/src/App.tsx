@@ -1393,12 +1393,16 @@ function App() {
     setNotice("");
     try {
       if (member) {
-        await pixelLifeApi.completeBoard(Number(board.id));
+        await pixelLifeApi.completeBoard(Number(board.id), today);
         const nextRewards = await pixelLifeApi.rewards();
         setRewards(nextRewards);
       }
       setBoards((v) =>
-        v.map((b) => (b.id === board.id ? { ...b, status: "COMPLETED" } : b)),
+        v.map((b) =>
+          b.id === board.id
+            ? { ...b, status: "COMPLETED", targetEndDate: today }
+            : b,
+        ),
       );
       navigate("home");
     } catch (error) {
@@ -2983,8 +2987,10 @@ function Detail({
   const days = diff(board.startDate, anchor) + 1,
     wins = board.entries.length,
     avg = wins ? board.entries.reduce((a, e) => a + e.value, 0) / wins : 0;
+  const anchorWeekEnd = new Date(`${anchor}T12:00:00`);
+  anchorWeekEnd.setDate(anchorWeekEnd.getDate() + (6 - anchorWeekEnd.getDay()));
   const maxPage = Math.floor(
-    Math.max(0, diff(board.startDate, anchor)) / BOARD_PAGE_DAYS,
+    Math.max(0, diff(board.startDate, key(anchorWeekEnd))) / BOARD_PAGE_DAYS,
   );
   const changePage = (direction: number) => {
     const next = Math.min(maxPage, Math.max(0, page + direction));
@@ -2996,8 +3002,8 @@ function Detail({
     }, 220);
   };
   const calendar = useMemo(() => {
-    const last = new Date(`${anchor}T12:00:00`);
-    last.setDate(last.getDate() + (6 - last.getDay()) - page * BOARD_PAGE_DAYS);
+    const last = new Date(anchorWeekEnd);
+    last.setDate(last.getDate() - page * BOARD_PAGE_DAYS);
     const first = new Date(last);
     first.setDate(last.getDate() - (BOARD_PAGE_DAYS - 1));
     const boardStart = new Date(`${board.startDate}T12:00:00`);

@@ -217,6 +217,15 @@ public class PixelLifeService {
 
     @Transactional
     public Map<String, Object> complete(long userId, long boardId) {
+        return complete(userId, boardId, LocalDate.now());
+    }
+
+    @Transactional
+    public Map<String, Object> complete(long userId, long boardId, LocalDate completedOn) {
+        LocalDate serverDate = LocalDate.now();
+        if (completedOn == null) completedOn = serverDate;
+        if (completedOn.isBefore(serverDate.minusDays(1)) || completedOn.isAfter(serverDate.plusDays(1)))
+            throw new IllegalArgumentException("Completion date is outside the allowed local date range");
         mapper.lockMember(userId);
         BoardRow board = requireBoard(userId, boardId);
         if (!"ACTIVE".equals(board.getStatus())) throw new IllegalStateException("Board is already complete");
@@ -224,12 +233,12 @@ public class PixelLifeService {
         LocalDate eligibleDate = board.getGoalDays() == null
             ? board.getStartDate().plusDays(6)
             : board.getStartDate().plusDays(Math.max(0, Math.floorDiv(board.getGoalDays() + 1, 2) - 1L));
-        if (LocalDate.now().isBefore(eligibleDate)) throw new IllegalStateException("This board can finish on " + eligibleDate);
-        int elapsed = (int) (LocalDate.now().toEpochDay() - board.getStartDate().toEpochDay()) + 1;
+        if (completedOn.isBefore(eligibleDate)) throw new IllegalStateException("This board can finish on " + eligibleDate);
+        int elapsed = (int) (completedOn.toEpochDay() - board.getStartDate().toEpochDay()) + 1;
         int goal = board.getGoalDays() == null ? elapsed : board.getGoalDays();
         BoardScoringService.Score result = scoring.score(goal, mapper.countEntries(boardId), mapper.countNotes(boardId));
         int awardedXp = result.xp();
-        if (mapper.completeBoard(boardId, userId, result.points(), awardedXp) != 1) throw new IllegalStateException("Board could not be completed");
+        if (mapper.completeBoard(boardId, userId, result.points(), awardedXp, completedOn) != 1) throw new IllegalStateException("Board could not be completed");
         if (awardedXp > 0) mapper.addXp(userId, awardedXp);
         int totalXp = number(mapper.findProgress(userId).get("totalXp"));
         String grade = grade(totalXp); mapper.updateGrade(userId, grade);

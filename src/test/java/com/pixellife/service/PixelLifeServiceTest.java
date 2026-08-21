@@ -113,7 +113,7 @@ class PixelLifeServiceTest {
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("can finish on");
 
-        verify(mapper, never()).completeBoard(anyLong(), anyLong(), anyInt(), anyInt());
+        verify(mapper, never()).completeBoard(anyLong(), anyLong(), anyInt(), anyInt(), any(LocalDate.class));
         verify(mapper, never()).addXp(anyLong(), anyInt());
     }
 
@@ -126,7 +126,7 @@ class PixelLifeServiceTest {
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining(LocalDate.now().plusDays(6).toString());
 
-        verify(mapper, never()).completeBoard(anyLong(), anyLong(), anyInt(), anyInt());
+        verify(mapper, never()).completeBoard(anyLong(), anyLong(), anyInt(), anyInt(), any(LocalDate.class));
     }
 
     @Test
@@ -139,7 +139,7 @@ class PixelLifeServiceTest {
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining(start.plusDays(14).toString());
 
-        verify(mapper, never()).completeBoard(anyLong(), anyLong(), anyInt(), anyInt());
+        verify(mapper, never()).completeBoard(anyLong(), anyLong(), anyInt(), anyInt(), any(LocalDate.class));
     }
 
     @Test
@@ -148,7 +148,7 @@ class PixelLifeServiceTest {
         when(mapper.findBoard(10L, 1L)).thenReturn(board);
         when(mapper.countEntries(10L)).thenReturn(7);
         when(mapper.countNotes(10L)).thenReturn(2);
-        when(mapper.completeBoard(10L, 1L, 100, 7)).thenReturn(0);
+        when(mapper.completeBoard(10L, 1L, 100, 7, LocalDate.now())).thenReturn(0);
 
         assertThatThrownBy(() -> service.complete(1L, 10L))
             .isInstanceOf(IllegalStateException.class)

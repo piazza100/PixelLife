@@ -62,7 +62,10 @@ public class PixelLifeController {
     public void deleteBoard(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId) { service.deleteBoard(service.memberId(user.getSubject()), boardId); }
 
     @PostMapping("/boards/{boardId}/complete")
-    public Map<String,Object> complete(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId) { return service.complete(service.memberId(user.getSubject()), boardId); }
+    public Map<String,Object> complete(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId,
+                                       @RequestParam(required=false) LocalDate date) {
+        return service.complete(service.memberId(user.getSubject()), boardId, date);
+    }
 
     @GetMapping("/rewards")
     public Map<String,Object> rewards(@AuthenticationPrincipal OidcUser user) { return service.rewards(service.memberId(user.getSubject())); }
