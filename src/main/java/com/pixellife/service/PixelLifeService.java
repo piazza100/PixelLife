@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class PixelLifeService {
-    private static final List<String> COLORS = List.of("#159651", "#3878D8", "#D6763E", "#8967C7", "#397D73", "#B56D50", "#A55B76", "#507F39");
+    static final List<String> COLORS = List.of("#159651", "#4F8FD8", "#D6763E", "#8967C7", "#C85F7A", "#2F8C83", "#5666A5", "#D96F62");
     private final PixelLifeMapper mapper;
     private final BoardScoringService scoring;
 
