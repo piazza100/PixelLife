@@ -9,12 +9,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class PixelLifeService {
     private final PixelLifeMapper mapper;
     private final BoardScoringService scoring;
+    private final Map<String, Long> memberIdCache = new ConcurrentHashMap<>();
+    private final Map<Integer, List<Map<String, Object>>> speciesPoolCache = new ConcurrentHashMap<>();
 
     public PixelLifeService(PixelLifeMapper mapper, BoardScoringService scoring) { this.mapper = mapper; this.scoring = scoring; }
 
@@ -26,18 +29,24 @@ public class PixelLifeService {
         member.put("email", email); member.put("displayName", displayName); member.put("avatarUrl", avatarUrl); member.put("locale", safeLocale(locale));
         mapper.insertMember(member);
         long id = ((Number) member.get("id")).longValue();
+        cacheMemberId(subject, id);
         return id;
     }
 
     public long memberId(String subject) {
+        Long cached = memberIdCache.get(subject);
+        if (cached != null) return cached;
         Long id = mapper.findMemberId("GOOGLE", subject);
         if (id == null) throw new NoSuchElementException("Account not found");
+        cacheMemberId(subject, id);
         return id;
     }
 
     @Transactional
     public long resolveOrCreateMember(String subject, String email, String locale) {
-        Long id = mapper.findMemberId("GOOGLE", subject);
+        Long id = memberIdCache.get(subject);
+        if (id == null) id = mapper.findMemberId("GOOGLE", subject);
+        if (id != null) cacheMemberId(subject, id);
         return id != null ? id : ensureMember(subject, email, null, null, locale);
     }
 
@@ -54,6 +63,7 @@ public class PixelLifeService {
         if (account == null) throw new NoSuchElementException("Account not found");
         if (isPlus(account)) throw new IllegalStateException("Cancel Plus and wait until the paid period ends before deleting your account");
         if (mapper.deleteMember(userId) != 1) throw new IllegalStateException("Account could not be deleted");
+        memberIdCache.values().removeIf(id -> id == userId);
     }
 
     @Transactional(readOnly = true)
@@ -63,11 +73,38 @@ public class PixelLifeService {
     }
 
     @Transactional
+    public Map<String, Object> bootstrapForLogin(String subject, String email, String locale) {
+        List<Map<String,Object>> rows = mapper.findBootstrapRows("GOOGLE", subject);
+        if (rows.isEmpty()) {
+            ensureMember(subject, email, null, null, locale);
+            rows = mapper.findBootstrapRows("GOOGLE", subject);
+        }
+        Map<String,Object> first = rows.get(0);
+        long userId = ((Number) first.get("memberId")).longValue();
+        cacheMemberId(subject, userId);
+        Map<String,Object> account = new HashMap<>();
+        account.put("id", userId);
+        account.put("email", first.get("email"));
+        account.put("plan", first.get("plan"));
+        account.put("paidUntil", localDateTime(first.get("paidUntil")));
+        account.put("totalXp", first.get("totalXp"));
+        account.put("gradeCode", first.get("gradeCode"));
+        account.put("effectivePlan", isPlus(account) ? "PLUS" : "FREE");
+        account.put("activeBoardLimit", isPlus(account) ? 10 : 3);
+
+        List<BoardRow> boards = rows.stream()
+            .filter(row -> row.get("boardId") != null)
+            .map(row -> bootstrapBoard(row, userId))
+            .toList();
+        return Map.of("member", account, "boards", boards);
+    }
+
+    @Transactional
     public BoardRow createBoard(long userId, String name, String type, LocalDate startDate, Integer goalDays) {
-        mapper.lockMember(userId);
-        Map<String,Object> account = mapper.findMember(userId);
+        Map<String,Object> account = mapper.findBoardCreationContextForUpdate(userId);
+        if (account == null) throw new NoSuchElementException("Account not found");
         int limit = isPlus(account) ? 10 : 3;
-        if (mapper.countActiveBoards(userId) >= limit) throw new IllegalStateException("Your plan allows " + limit + " active board" + (limit == 1 ? "" : "s"));
+        if (number(account.get("activeCount")) >= limit) throw new IllegalStateException("Your plan allows " + limit + " active board" + (limit == 1 ? "" : "s"));
         String boardType = switch (type == null ? "" : type.toUpperCase(Locale.ROOT)) {
             case "LEVEL", "CHECK", "MOOD" -> type.toUpperCase(Locale.ROOT);
             default -> throw new IllegalArgumentException("Unsupported board type");
@@ -76,9 +113,12 @@ public class PixelLifeService {
         if (goalDays != null && (goalDays < 3 || goalDays > 3650)) throw new IllegalArgumentException("Goal days must be between 3 and 3650");
         LocalDate safeStartDate = startDate == null ? LocalDate.now() : startDate;
         if (safeStartDate.isAfter(LocalDate.now())) throw new IllegalArgumentException("Start date cannot be in the future");
-        Map<String,Object> progress = mapper.findProgress(userId);
-        String currentGrade = grade(number(progress.get("totalXp")));
-        Map<String,Object> species = weightedPick(mapper.findSpeciesPool(poolLimit(currentGrade)));
+        String currentGrade = String.valueOf(account.get("gradeCode"));
+        int speciesLimit = poolLimit(currentGrade);
+        List<Map<String,Object>> speciesPool = speciesPoolCache.computeIfAbsent(speciesLimit,
+            limitKey -> mapper.findSpeciesPool(limitKey).stream()
+                .<Map<String,Object>>map(HashMap::new).toList());
+        Map<String,Object> species = weightedPick(speciesPool);
         List<Map<String,Object>> unlockedColors = mapper.findUnlockedColors(userId);
         Map<String,Object> plantColor = unlockedColors.get(ThreadLocalRandom.current().nextInt(unlockedColors.size()));
         BoardRow board = new BoardRow(); board.setUserId(userId); board.setName(name.trim()); board.setBoardType(boardType);
@@ -111,7 +151,6 @@ public class PixelLifeService {
         if ("MOOD".equals(board.getBoardType()) && (emoji == null || emoji.isBlank())) throw new IllegalArgumentException("Mood is required");
         if (note != null && note.length() > 280) throw new IllegalArgumentException("Note is too long");
         mapper.upsertEntry(boardId, date, value, success, emoji, note == null || note.isBlank() ? null : note.trim());
-        mapper.touchBoard(boardId);
     }
 
     @Transactional
@@ -124,10 +163,6 @@ public class PixelLifeService {
 
     @Transactional
     public void deleteBoard(long userId, long boardId) {
-        mapper.lockMember(userId);
-        BoardRow board = requireBoard(userId, boardId);
-        if (!"ACTIVE".equals(board.getStatus())) throw new IllegalStateException("Completed boards cannot be deleted");
-        requireWritable(userId, boardId);
         if (mapper.deleteActiveBoard(boardId, userId) != 1) throw new IllegalStateException("Board could not be deleted");
     }
 
@@ -234,6 +269,47 @@ public class PixelLifeService {
     private void requireWritable(long userId, long boardId) {
         // Existing active boards stay writable after a Plus subscription ends.
         // The shared three-board limit is enforced only when a new board is created.
+    }
+
+    private BoardRow bootstrapBoard(Map<String,Object> row, long userId) {
+        BoardRow board = new BoardRow();
+        board.setId(((Number) row.get("boardId")).longValue());
+        board.setUserId(userId);
+        board.setName(String.valueOf(row.get("boardName")));
+        board.setBoardType(String.valueOf(row.get("boardType")));
+        board.setColor(String.valueOf(row.get("color")));
+        board.setRewardSpeciesCode(String.valueOf(row.get("rewardSpeciesCode")));
+        board.setRewardSpeciesName(String.valueOf(row.get("rewardSpeciesName")));
+        board.setRewardSpeciesSymbol(String.valueOf(row.get("rewardSpeciesSymbol")));
+        board.setRewardColorCode(String.valueOf(row.get("rewardColorCode")));
+        board.setStartDate(localDate(row.get("startDate")));
+        board.setGoalDays(row.get("goalDays") == null ? null : number(row.get("goalDays")));
+        board.setStatus(String.valueOf(row.get("status")));
+        board.setEndedAt(localDate(row.get("endedAt")));
+        board.setCompletedAt(localDateTime(row.get("completedAt")));
+        board.setFinalScore(row.get("finalScore") == null ? null : number(row.get("finalScore")));
+        board.setXpAwarded(row.get("xpAwarded") == null ? 0 : number(row.get("xpAwarded")));
+        board.setCreatedAt(localDateTime(row.get("createdAt")));
+        return board;
+    }
+
+    private LocalDate localDate(Object value) {
+        if (value == null) return null;
+        if (value instanceof LocalDate date) return date;
+        if (value instanceof java.sql.Date date) return date.toLocalDate();
+        return LocalDate.parse(String.valueOf(value));
+    }
+
+    private LocalDateTime localDateTime(Object value) {
+        if (value == null) return null;
+        if (value instanceof LocalDateTime time) return time;
+        if (value instanceof java.sql.Timestamp time) return time.toLocalDateTime();
+        return LocalDateTime.parse(String.valueOf(value).replace(' ', 'T'));
+    }
+
+    private void cacheMemberId(String subject, long id) {
+        if (memberIdCache.size() >= 10_000) memberIdCache.clear();
+        memberIdCache.put(subject, id);
     }
 
     private boolean isPlus(Map<String,Object> account) {

@@ -34,21 +34,21 @@ class PixelLifeServiceTest {
 
     @Test
     void serializesBoardCreationBeforeCheckingThePlanLimit() {
-        when(mapper.countActiveBoards(1L)).thenReturn(0);
+        when(mapper.findBoardCreationContextForUpdate(1L)).thenReturn(Map.of("plan", "FREE", "gradeCode", "SEED", "activeCount", 0));
         when(mapper.findBoards(1L)).thenReturn(List.of());
 
         service.createBoard(1L, "Read", "LEVEL", LocalDate.now(), 30);
 
         var order = inOrder(mapper);
-        order.verify(mapper).lockMember(1L);
-        order.verify(mapper).findMember(1L);
-        order.verify(mapper).countActiveBoards(1L);
+        order.verify(mapper).findBoardCreationContextForUpdate(1L);
         verify(mapper).insertBoard(any(BoardRow.class));
     }
 
     @Test
     void freeMemberCanKeepThreeActiveBoardsButNotFour() {
-        when(mapper.countActiveBoards(1L)).thenReturn(2, 3);
+        when(mapper.findBoardCreationContextForUpdate(1L)).thenReturn(
+            Map.of("plan", "FREE", "gradeCode", "SEED", "activeCount", 2),
+            Map.of("plan", "FREE", "gradeCode", "SEED", "activeCount", 3));
         when(mapper.findBoards(1L)).thenReturn(List.of());
 
         service.createBoard(1L, "Third", "LEVEL", LocalDate.now(), 30);
@@ -61,11 +61,17 @@ class PixelLifeServiceTest {
 
     @Test
     void plusMemberCanUseTenActiveBoardsButNotEleven() {
-        when(mapper.findMember(1L)).thenReturn(Map.of(
+        when(mapper.findBoardCreationContextForUpdate(1L)).thenReturn(Map.of(
             "plan", "PLUS",
-            "paidUntil", LocalDateTime.now().plusDays(10)
+            "paidUntil", LocalDateTime.now().plusDays(10),
+            "gradeCode", "SEED",
+            "activeCount", 9
+        ), Map.of(
+            "plan", "PLUS",
+            "paidUntil", LocalDateTime.now().plusDays(10),
+            "gradeCode", "SEED",
+            "activeCount", 10
         ));
-        when(mapper.countActiveBoards(1L)).thenReturn(9, 10);
 
         when(mapper.findBoards(1L)).thenReturn(List.of());
         service.createBoard(1L, "Tenth", "MOOD", LocalDate.now(), 30);
@@ -89,7 +95,7 @@ class PixelLifeServiceTest {
 
     @Test
     void customGoalMustBeAtLeastThreeDays() {
-        when(mapper.countActiveBoards(1L)).thenReturn(0);
+        when(mapper.findBoardCreationContextForUpdate(1L)).thenReturn(Map.of("plan", "FREE", "gradeCode", "SEED", "activeCount", 0));
 
         assertThatThrownBy(() -> service.createBoard(1L, "Too short", "LEVEL", LocalDate.now(), 2))
             .isInstanceOf(IllegalArgumentException.class)
@@ -161,7 +167,6 @@ class PixelLifeServiceTest {
         service.saveEntry(1L, 10L, LocalDate.now(), 4, null, null, " done ");
 
         verify(mapper).upsertEntry(10L, LocalDate.now(), 4, null, null, "done");
-        verify(mapper).touchBoard(10L);
     }
 
     @Test
@@ -177,27 +182,22 @@ class PixelLifeServiceTest {
 
     @Test
     void deletesOnlyAnActiveWritableBoard() {
-        BoardRow board = board(LocalDate.now(), LocalDateTime.now(), 30);
-        when(mapper.findBoard(10L, 1L)).thenReturn(board);
         when(mapper.deleteActiveBoard(10L, 1L)).thenReturn(1);
 
         service.deleteBoard(1L, 10L);
 
-        verify(mapper).lockMember(1L);
         verify(mapper).deleteActiveBoard(10L, 1L);
     }
 
     @Test
     void completedBoardCannotBeDeletedToFarmXpAgain() {
-        BoardRow board = board(LocalDate.now().minusDays(10), LocalDateTime.now().minusDays(10), 7);
-        board.setStatus("COMPLETED");
-        when(mapper.findBoard(10L, 1L)).thenReturn(board);
+        when(mapper.deleteActiveBoard(10L, 1L)).thenReturn(0);
 
         assertThatThrownBy(() -> service.deleteBoard(1L, 10L))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Completed boards cannot be deleted");
+            .hasMessage("Board could not be deleted");
 
-        verify(mapper, never()).deleteActiveBoard(anyLong(), anyLong());
+        verify(mapper).deleteActiveBoard(10L, 1L);
     }
 
     @Test

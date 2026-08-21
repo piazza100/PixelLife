@@ -22,8 +22,7 @@ public class PixelLifeController {
 
     @GetMapping("/bootstrap")
     public Map<String, Object> bootstrap(@AuthenticationPrincipal OidcUser user, @RequestParam(defaultValue="en") String locale) {
-        long userId = service.resolveOrCreateMember(user.getSubject(), user.getEmail(), locale);
-        return service.bootstrap(userId);
+        return service.bootstrapForLogin(user.getSubject(), user.getEmail(), locale);
     }
 
     @GetMapping("/entries")
@@ -72,7 +71,7 @@ public class PixelLifeController {
     public void deleteAccount(@AuthenticationPrincipal OidcUser user) { service.deleteAccount(service.memberId(user.getSubject())); }
 
     private long memberId(OidcUser user, String locale) {
-        return service.ensureMember(user.getSubject(), user.getEmail(), null, null, locale);
+        return service.resolveOrCreateMember(user.getSubject(), user.getEmail(), locale);
     }
 
     public record CreateBoard(@NotBlank @Size(max=24) String name, @NotBlank String type, LocalDate startDate, @Min(3) @Max(3650) Integer goalDays) {}

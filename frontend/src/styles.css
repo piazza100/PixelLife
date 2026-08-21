@@ -2211,6 +2211,16 @@ footer b {
   font-size: 10px;
   font-weight: 800;
 }
+.period-ended-card {
+  border-color: #c9ddcf;
+  background: #f2faf4;
+}
+.period-ended-card .eyebrow {
+  color: #087b42;
+}
+.period-ended-card > p:not(.eyebrow) {
+  margin-bottom: 0;
+}
 .grade-catalog article.current {
   border-color: #159651;
   box-shadow: inset 0 0 0 1px #159651;

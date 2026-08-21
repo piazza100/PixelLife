@@ -20,11 +20,28 @@ public interface PixelLifeMapper {
     @Select("SELECT id FROM users WHERE id=#{userId} FOR UPDATE")
     Long lockMember(Long userId);
 
+    @Select("SELECT u.plan,u.paid_until AS paidUntil,u.grade_code AS gradeCode,(SELECT COUNT(*) FROM boards b WHERE b.user_id=u.id AND b.status='ACTIVE') AS activeCount FROM users u WHERE u.id=#{userId} FOR UPDATE")
+    Map<String,Object> findBoardCreationContextForUpdate(Long userId);
+
     @Update("UPDATE users SET email=#{email},display_name=#{displayName},avatar_url=#{avatarUrl},locale=#{locale} WHERE id=#{id}")
     void updateMember(Map<String, Object> member);
 
     @Select("SELECT id,email,display_name AS displayName,avatar_url AS avatarUrl,plan,paid_until AS paidUntil,total_xp AS totalXp,grade_code AS gradeCode FROM users WHERE id=#{userId}")
     Map<String,Object> findMember(Long userId);
+
+    @Select("""
+        SELECT u.id AS memberId,u.email,u.plan,u.paid_until AS paidUntil,u.total_xp AS totalXp,u.grade_code AS gradeCode,
+               b.id AS boardId,b.name AS boardName,b.board_type AS boardType,b.color,b.reward_species_code AS rewardSpeciesCode,
+               b.reward_color_code AS rewardColorCode,s.name AS rewardSpeciesName,s.unicode_symbol AS rewardSpeciesSymbol,
+               b.start_date AS startDate,b.goal_days AS goalDays,b.status,b.ended_at AS endedAt,b.completed_at AS completedAt,
+               b.final_score AS finalScore,b.xp_awarded AS xpAwarded,b.created_at AS createdAt
+        FROM users u
+        LEFT JOIN boards b ON b.user_id=u.id
+        LEFT JOIN plant_species s ON s.code=b.reward_species_code
+        WHERE u.auth_provider=#{provider} AND u.provider_subject=#{subject}
+        ORDER BY b.created_at DESC,b.id DESC
+        """)
+    List<Map<String,Object>> findBootstrapRows(String provider, String subject);
 
     @Select("SELECT id,email,display_name AS displayName,plan,paid_until AS paidUntil,total_xp AS totalXp,grade_code AS gradeCode,created_at AS createdAt FROM users ORDER BY id DESC LIMIT 200")
     List<Map<String,Object>> findTestUsers();

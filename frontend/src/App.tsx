@@ -523,6 +523,22 @@ const extraWords: Record<Locale, Record<string, string>> = {
 extraWords.zh.serverWaking = "服务器正在启动，请稍后再试。";
 extraWords.ja.serverWaking =
   "サーバーを起動しています。少し待ってからもう一度お試しください。";
+extraWords.en.periodEnded = "GOAL PERIOD ENDED";
+extraWords.en.periodEndedTitle = "This board is ready to finish.";
+extraWords.en.periodEndedHelp =
+  "Today's record is closed because the goal date has passed. Review your board and finish it when you are ready.";
+extraWords.ko.periodEnded = "목표 기간 종료";
+extraWords.ko.periodEndedTitle = "이 보드는 완료할 수 있어요.";
+extraWords.ko.periodEndedHelp =
+  "목표 종료일이 지나 오늘 기록은 입력할 수 없어요. 기록을 확인한 뒤 보드를 완료해 주세요.";
+extraWords.zh.periodEnded = "目标期间已结束";
+extraWords.zh.periodEndedTitle = "此面板可以完成了。";
+extraWords.zh.periodEndedHelp =
+  "目标日期已过，今天无法再记录。请查看记录后完成面板。";
+extraWords.ja.periodEnded = "目標期間終了";
+extraWords.ja.periodEndedTitle = "このボードは完了できます。";
+extraWords.ja.periodEndedHelp =
+  "目標終了日を過ぎたため、今日の記録は追加できません。記録を確認してボードを完了してください。";
 extraWords.en.finishRule =
   "A goal board can finish halfway through its period. Endless boards open on day 7. XP is awarded once.";
 extraWords.ko.finishRule =
@@ -874,6 +890,8 @@ const titleCase = (value: string) =>
     .join(" ");
 const GUEST_BOARD_KEY = "pixellife-guest-board-v1";
 const LOCALE_KEY = "pixellife-locale";
+const REWARDS_CACHE_PREFIX = "pixellife-rewards-";
+const ENTRIES_CACHE_PREFIX = "pixellife-entries-";
 const loadLocale = (): Locale => {
   const saved = localStorage.getItem(LOCALE_KEY);
   return saved === "ko" || saved === "zh" || saved === "ja" ? saved : "en";
@@ -1051,12 +1069,44 @@ function App() {
           current === extraWords[locale].serverWaking ? "" : current,
         );
         setMember(account);
+        const rewardsCacheKey = `${REWARDS_CACHE_PREFIX}${account.id}`;
+        const entriesCacheKey = `${ENTRIES_CACHE_PREFIX}${account.id}`;
+        if (!data.rewards) {
+          try {
+            const cached = localStorage.getItem(rewardsCacheKey);
+            if (cached) setRewards(JSON.parse(cached));
+          } catch {
+            localStorage.removeItem(rewardsCacheKey);
+          }
+        }
+        if (!Array.isArray(data.entries)) {
+          try {
+            const cached = localStorage.getItem(entriesCacheKey);
+            if (cached) {
+              const cachedEntries = JSON.parse(cached);
+              const cachedByBoard = new Map<number, any[]>();
+              cachedEntries.forEach((entry: any) => {
+                const boardEntries = cachedByBoard.get(entry.boardId) || [];
+                boardEntries.push(entry);
+                cachedByBoard.set(entry.boardId, boardEntries);
+              });
+              loaded = data.boards.map((item) =>
+                fromApiBoard(item, cachedByBoard.get(item.id) || []),
+              );
+            }
+          } catch {
+            localStorage.removeItem(entriesCacheKey);
+          }
+        }
         if (data.rewards) setRewards(data.rewards);
         else
           pixelLifeApi
             .rewards()
             .then((nextRewards) => {
-              if (alive) setRewards(nextRewards);
+              if (alive) {
+                setRewards(nextRewards);
+                localStorage.setItem(rewardsCacheKey, JSON.stringify(nextRewards));
+              }
             })
             .catch((error) =>
               console.error("PixelLife rewards load failed", error),
@@ -1070,6 +1120,7 @@ function App() {
             .entries()
             .then((entries) => {
               if (!alive) return;
+              localStorage.setItem(entriesCacheKey, JSON.stringify(entries));
               const entriesByBoard = new Map<number, typeof entries>();
               entries.forEach((entry) => {
                 const boardEntries = entriesByBoard.get(entry.boardId) || [];
@@ -1258,7 +1309,6 @@ function App() {
         const next = fromApiBoard(created);
         setBoards((v) => [next, ...v]);
         setSelected(next.id);
-        setMember(await pixelLifeApi.me(locale));
       } else {
         const id = `guest-${Date.now()}`;
         const next: Board = {
@@ -1291,6 +1341,7 @@ function App() {
     if (busy) return;
     setBusy(true);
     setNotice("");
+    const previousEntries = board.entries;
     try {
       const entry = {
         date: today,
@@ -1305,16 +1356,6 @@ function App() {
         note: note.trim() || undefined,
         emoji: board.inputType === "mood" ? mood : undefined,
       };
-      if (member)
-        await pixelLifeApi.saveEntry(
-          Number(board.id),
-          today,
-          board.inputType === "level"
-            ? { value: level, note: entry.note }
-            : board.inputType === "check"
-              ? { success: checkSuccess, note: entry.note }
-              : { emoji: mood, note: entry.note },
-        );
       setBoards((v) =>
         v.map((b) =>
           b.id === board.id
@@ -1325,9 +1366,22 @@ function App() {
             : b,
         ),
       );
+      if (member)
+        await pixelLifeApi.saveEntry(
+          Number(board.id),
+          today,
+          board.inputType === "level"
+            ? { value: level, note: entry.note }
+            : board.inputType === "check"
+              ? { success: checkSuccess, note: entry.note }
+              : { emoji: mood, note: entry.note },
+        );
       setSaved(true);
       setTimeout(() => setSaved(false), 1300);
     } catch (error) {
+      setBoards((v) =>
+        v.map((b) => (b.id === board.id ? { ...b, entries: previousEntries } : b)),
+      );
       showError(error, actionWords[locale].saveError);
     } finally {
       setBusy(false);
@@ -1340,12 +1394,8 @@ function App() {
     try {
       if (member) {
         await pixelLifeApi.completeBoard(Number(board.id));
-        const [nextRewards, nextMember] = await Promise.all([
-          pixelLifeApi.rewards(),
-          pixelLifeApi.me(locale),
-        ]);
+        const nextRewards = await pixelLifeApi.rewards();
         setRewards(nextRewards);
-        setMember(nextMember);
       }
       setBoards((v) =>
         v.map((b) => (b.id === board.id ? { ...b, status: "COMPLETED" } : b)),
@@ -1364,7 +1414,6 @@ function App() {
     try {
       if (member) {
         await pixelLifeApi.deleteBoard(Number(board.id));
-        setMember(await pixelLifeApi.me(locale));
       }
       setBoards((v) => v.filter((b) => b.id !== board.id));
       setSelected("");
@@ -2922,10 +2971,18 @@ function Detail({
   );
   const swipeStart = useRef(0);
   const swipeGuard = useRef({ x: 0, y: 0, id: -1 });
-  const days = diff(board.startDate, today) + 1,
+  useEffect(() => {
+    setPage(0);
+    setTab("board");
+    setInspect(board.entries.filter((entry) => entry.note).at(-1));
+  }, [board.id]);
+  const boardEnd = endDate(board);
+  const periodExpired =
+    !isFinished(board) && boardEnd !== null && today > boardEnd;
+  const anchor = boardEnd && (isFinished(board) || periodExpired) ? boardEnd : today;
+  const days = diff(board.startDate, anchor) + 1,
     wins = board.entries.length,
     avg = wins ? board.entries.reduce((a, e) => a + e.value, 0) / wins : 0;
-  const anchor = endDate(board) && isFinished(board) ? endDate(board)! : today;
   const maxPage = Math.floor(
     Math.max(0, diff(board.startDate, anchor)) / BOARD_PAGE_DAYS,
   );
@@ -2943,12 +3000,11 @@ function Detail({
     last.setDate(last.getDate() + (6 - last.getDay()) - page * BOARD_PAGE_DAYS);
     const first = new Date(last);
     first.setDate(last.getDate() - (BOARD_PAGE_DAYS - 1));
-    const createdWeek = new Date(`${board.startDate}T12:00:00`);
-    createdWeek.setDate(createdWeek.getDate() - createdWeek.getDay());
-    const visibleFirst = first < createdWeek ? createdWeek : first;
+    const boardStart = new Date(`${board.startDate}T12:00:00`);
+    const visibleFirst = first < boardStart ? boardStart : first;
     const count =
       Math.floor((last.getTime() - visibleFirst.getTime()) / 86400000) + 1;
-    return Array.from({ length: Math.max(7, count) }, (_, i) => {
+    return Array.from({ length: Math.max(1, count) }, (_, i) => {
       const d = new Date(visibleFirst);
       d.setDate(visibleFirst.getDate() + i);
       const k = key(d),
@@ -2960,7 +3016,11 @@ function Detail({
             ? entry.emoji
             : d.getDate(),
         entry,
-        available: k >= board.startDate && k <= anchor,
+        weekDay: d.getDay(),
+        available:
+          k >= board.startDate &&
+          k <= anchor &&
+          (boardEnd === null || k <= boardEnd),
       };
     });
   }, [board, page, anchor]);
@@ -3102,7 +3162,11 @@ function Detail({
             <div className="detail-head">
               <div>
                 <p className="eyebrow">
-                  {t.day} {days} · {isFinished(board) ? t.completed : t.rolling}
+                  {t.day} {days} · {isFinished(board)
+                    ? t.completed
+                    : periodExpired
+                      ? t.periodEnded
+                      : t.rolling}
                 </p>
                 <h1>{board.title}</h1>
                 <p className="detail-summary">
@@ -3135,7 +3199,7 @@ function Detail({
               ))}
             </div>
             <div className="calendar-grid">
-              {calendar.map((c) => {
+              {calendar.map((c, index) => {
                 const streakClass =
                   c.entry && streakDates.has(c.k) && streakTier
                     ? `streak s${streakTier}`
@@ -3144,8 +3208,9 @@ function Detail({
                   <button
                     key={c.k}
                     disabled={!c.available}
+                    style={index === 0 ? { gridColumnStart: c.weekDay + 1 } : undefined}
                     onClick={() => setInspect(c.entry)}
-                    className={`${c.entry ? `done level-${c.entry.value}` : ""} ${c.k === today ? "today" : ""} ${c.entry?.note ? "has-note" : ""} ${streakClass}`}
+                    className={`${c.entry ? `done level-${c.entry.value}` : ""} ${!isFinished(board) && c.available && c.k === today ? "today" : ""} ${c.entry?.note ? "has-note" : ""} ${streakClass}`}
                     title={c.k}
                   >
                     <small>{c.num}</small>
@@ -3196,6 +3261,12 @@ function Detail({
                 <h2>{t.recordsSafe}</h2>
                 <p>{t.freeReadOnly}</p>
                 <button onClick={onUpgrade}>{t.startPlus}</button>
+              </section>
+            ) : periodExpired ? (
+              <section className="readonly-card period-ended-card">
+                <p className="eyebrow">{t.periodEnded}</p>
+                <h2>{t.periodEndedTitle}</h2>
+                <p>{t.periodEndedHelp}</p>
               </section>
             ) : (
               <Today

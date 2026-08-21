@@ -26,15 +26,15 @@ class LoginPerformanceAuditTest {
             """, userId);
 
         long started = System.nanoTime();
-        long resolvedId = service.resolveOrCreateMember(
+        Map<String, Object> bootstrap = service.bootstrapForLogin(
             String.valueOf(source.get("provider_subject")),
             String.valueOf(source.get("email")),
             String.valueOf(source.get("locale")));
-        long memberMs = elapsedMs(started);
+        long bootstrapMs = elapsedMs(started);
 
         started = System.nanoTime();
-        Map<String, Object> bootstrap = service.bootstrap(userId);
-        long bootstrapMs = elapsedMs(started);
+        long resolvedId = service.memberId(String.valueOf(source.get("provider_subject")));
+        long cachedMemberMs = elapsedMs(started);
 
         started = System.nanoTime();
         Map<String, Object> rewards = service.rewards(userId);
@@ -45,7 +45,7 @@ class LoginPerformanceAuditTest {
         assertThat(rewards).containsKeys("totalXp", "gradeCode", "badges", "plants");
 
         System.out.println("PIXELLIFE_LOGIN_PERFORMANCE=user:" + userId
-            + ",memberMs:" + memberMs
+            + ",cachedMemberMs:" + cachedMemberMs
             + ",bootstrapMs:" + bootstrapMs
             + ",rewardsMs:" + rewardsMs);
     }
