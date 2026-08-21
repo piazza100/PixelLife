@@ -138,9 +138,12 @@ public class PixelLifeService {
             item.put("id", board.getId()); item.put("name", board.getName());
             item.put("type", board.getBoardType()); item.put("status", board.getStatus());
             item.put("startDate", board.getStartDate()); item.put("endDate", board.getEndedAt());
+            item.put("goalDays", board.getGoalDays()); item.put("recordCount", mapper.countEntries(board.getId()));
             return item;
         }).toList();
     }
+
+    public List<Map<String, Object>> testUsers() { return mapper.findTestUsers(); }
 
     @Transactional
     public Map<String, Object> fillTestEntries(long userId, long boardId, LocalDate first, LocalDate last) {

@@ -26,6 +26,9 @@ public interface PixelLifeMapper {
     @Select("SELECT id,email,display_name AS displayName,avatar_url AS avatarUrl,plan,paid_until AS paidUntil,total_xp AS totalXp,grade_code AS gradeCode FROM users WHERE id=#{userId}")
     Map<String,Object> findMember(Long userId);
 
+    @Select("SELECT id,email,display_name AS displayName,plan,paid_until AS paidUntil,total_xp AS totalXp,grade_code AS gradeCode,created_at AS createdAt FROM users ORDER BY id DESC LIMIT 200")
+    List<Map<String,Object>> findTestUsers();
+
     @Delete("DELETE FROM users WHERE id=#{userId}")
     int deleteMember(Long userId);
 

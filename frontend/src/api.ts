@@ -13,6 +13,8 @@ export type RewardGrade = {code:string;xp:number;species:number}
 export type RewardData = {totalXp:number;gradeCode:string;badges:RewardBadge[];plants:RewardPlant[];speciesPool:RewardSpecies[];unlockedColors:RewardColor[];gradeGuide:RewardGrade[]}
 
 export type Member = {id:number;email:string;displayName:string;avatarUrl?:string;effectivePlan:'FREE'|'PLUS';activeBoardLimit:3|10}
+export type TestUser = {id:number;email:string;displayName:string;plan:'FREE'|'PLUS';paidUntil:string|null;totalXp:number;gradeCode:string;createdAt:string}
+export type TestBoard = {id:number;name:string;type:'LEVEL'|'CHECK'|'MOOD';status:'ACTIVE'|'COMPLETED';startDate:string;endDate:string|null;goalDays:number|null;recordCount:number}
 
 let csrfToken=''
 // Web and API always share the browser origin. Vite proxies locally and
@@ -55,6 +57,10 @@ export const pixelLifeApi={
   ,createPlusCheckout:()=>request<{url:string}>('/billing/checkout',{method:'POST'})
   ,createCustomerPortal:()=>request<{url:string}>('/billing/portal',{method:'POST'})
   ,deleteAccount:()=>request<void>('/me',{method:'DELETE'})
+  ,testUsers:()=>request<TestUser[]>('/test/users')
+  ,testUserBoards:(userId:number)=>request<TestBoard[]>(`/test/users/${userId}/boards`)
+  ,testCreateBoard:(userId:number,body:{name:string;type:'LEVEL'|'CHECK'|'MOOD';startDate:string;goalDays:number|null})=>request<TestBoard>(`/test/users/${userId}/boards`,{method:'POST',body:JSON.stringify(body)})
+  ,testFillBoard:(userId:number,boardId:number,query:string)=>request<{saved:number;from:string;to:string}>(`/test/users/${userId}/boards/${boardId}/fill?${query}`,{method:'POST'})
 }
 
 export const authLinks={google:`${API_ORIGIN}/oauth2/authorization/google`,logout:`${API_ORIGIN}/logout`}
