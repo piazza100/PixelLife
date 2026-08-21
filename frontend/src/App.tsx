@@ -3107,6 +3107,10 @@ function Detail({
     const card = document.querySelector<HTMLElement>(".detail .calendar-card");
     if (!card) return;
     const down = (e: PointerEvent) => {
+      if ((e.target as Element).closest("button, input, textarea, select, a")) {
+        swipeGuard.current.id = -1;
+        return;
+      }
       swipeGuard.current = { x: e.clientX, y: e.clientY, id: e.pointerId };
       card.setPointerCapture?.(e.pointerId);
     };
@@ -3158,9 +3162,13 @@ function Detail({
           <section
             className={`calendar-card ${loading ? "loading" : ""}`}
             onPointerDown={(e) => {
+              if ((e.target as Element).closest("button, input, textarea, select, a"))
+                return;
               swipeStart.current = e.clientX;
             }}
             onPointerUp={(e) => {
+              if ((e.target as Element).closest("button, input, textarea, select, a"))
+                return;
               const delta = e.clientX - swipeStart.current;
               if (Math.abs(delta) > 45) changePage(delta > 0 ? -1 : 1);
             }}
