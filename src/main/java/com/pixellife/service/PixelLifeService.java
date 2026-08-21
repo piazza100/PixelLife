@@ -40,7 +40,7 @@ public class PixelLifeService {
     public Map<String,Object> member(long userId) {
         Map<String,Object> result = new HashMap<>(mapper.findMember(userId));
         result.put("effectivePlan", isPlus(result) ? "PLUS" : "FREE");
-        result.put("activeBoardLimit", 3);
+        result.put("activeBoardLimit", isPlus(result) ? 10 : 3);
         return result;
     }
 
@@ -60,7 +60,7 @@ public class PixelLifeService {
     public BoardRow createBoard(long userId, String name, String type, LocalDate startDate, Integer goalDays) {
         mapper.lockMember(userId);
         Map<String,Object> account = mapper.findMember(userId);
-        int limit = 3;
+        int limit = isPlus(account) ? 10 : 3;
         if (mapper.countActiveBoards(userId) >= limit) throw new IllegalStateException("Your plan allows " + limit + " active board" + (limit == 1 ? "" : "s"));
         String boardType = switch (type == null ? "" : type.toUpperCase(Locale.ROOT)) {
             case "LEVEL", "CHECK", "MOOD" -> type.toUpperCase(Locale.ROOT);

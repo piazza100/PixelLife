@@ -51,17 +51,20 @@ class PixelLifeServiceTest {
     }
 
     @Test
-    void plusMemberAlsoUsesTheThreeActiveBoardLimit() {
+    void plusMemberCanUseTenActiveBoardsButNotEleven() {
         when(mapper.findMember(1L)).thenReturn(Map.of(
             "plan", "PLUS",
             "paidUntil", LocalDateTime.now().plusDays(10)
         ));
-        when(mapper.countActiveBoards(1L)).thenReturn(3);
+        when(mapper.countActiveBoards(1L)).thenReturn(9, 10);
 
-        assertThatThrownBy(() -> service.createBoard(1L, "Fourth", "MOOD", LocalDate.now(), 30))
+        when(mapper.findBoards(1L)).thenReturn(List.of());
+        service.createBoard(1L, "Tenth", "MOOD", LocalDate.now(), 30);
+
+        assertThatThrownBy(() -> service.createBoard(1L, "Eleventh", "MOOD", LocalDate.now(), 30))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Your plan allows 3 active boards");
-        verify(mapper, never()).insertBoard(any(BoardRow.class));
+            .hasMessage("Your plan allows 10 active boards");
+        verify(mapper, times(1)).insertBoard(any(BoardRow.class));
     }
 
     @Test
