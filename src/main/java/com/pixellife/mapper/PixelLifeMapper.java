@@ -136,7 +136,7 @@ public interface PixelLifeMapper {
     @Update("UPDATE users SET grade_code=#{grade} WHERE id=#{userId}")
     void updateGrade(Long userId, String grade);
 
-    @Select("SELECT p.id,p.species_code AS speciesCode,s.name AS speciesName,s.unicode_symbol AS symbol,p.color_code AS colorCode,c.css_color AS cssColor,p.map_x AS mapX,p.map_y AS mapY,p.earned_at AS earnedAt,p.board_id AS boardId,b.name AS boardName,b.final_score AS score FROM plants p JOIN plant_species s ON s.code=p.species_code JOIN plant_colors c ON c.code=p.color_code JOIN boards b ON b.id=p.board_id WHERE p.user_id=#{userId} ORDER BY p.earned_at DESC")
+    @Select("SELECT p.id,p.species_code AS speciesCode,s.name AS speciesName,s.unicode_symbol AS symbol,p.color_code AS colorCode,c.css_color AS cssColor,p.map_x AS mapX,p.map_y AS mapY,p.earned_at AS earnedAt,p.board_id AS boardId,b.name AS boardName,b.xp_awarded AS xpAwarded FROM plants p JOIN plant_species s ON s.code=p.species_code JOIN plant_colors c ON c.code=p.color_code JOIN boards b ON b.id=p.board_id WHERE p.user_id=#{userId} ORDER BY p.earned_at DESC")
     List<Map<String, Object>> findPlants(Long userId);
 
     @Select("SELECT MAX(streak) FROM (SELECT COUNT(*) streak FROM (SELECT entry_date,DATE_SUB(entry_date,INTERVAL ROW_NUMBER() OVER(ORDER BY entry_date) DAY) grp FROM (SELECT DISTINCT e.entry_date FROM pixel_entries e JOIN boards b ON b.id=e.board_id WHERE b.user_id=#{userId}) d) x GROUP BY grp) y")

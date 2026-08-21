@@ -2555,7 +2555,7 @@ function CollectedPlant({ plant, t }: { plant: RewardPlant; t: any }) {
       <span className="species">{plant.speciesName}</span>
       <strong>{plant.boardName}</strong>
       <small>
-        {plant.score} {t.points} · {plant.earnedAt?.slice(0, 10)}
+        {plant.xpAwarded} XP · {plant.earnedAt?.slice(0, 10)}
       </small>
     </div>
   );
@@ -2665,7 +2665,7 @@ function Garden({
                         top: `${35 + plant.mapY * 92}px`,
                       } as React.CSSProperties
                     }
-                    title={`${plant.boardName} · ${plant.score} ${t.points}`}
+                    title={`${plant.boardName} · ${plant.xpAwarded} XP`}
                   >
                     <b>{plant.symbol}</b>
                     <small>{plant.boardName}</small>
@@ -3542,7 +3542,7 @@ function GuideRewardRules({ locale }: { locale: Locale }) {
     ["Pixel", "30 records", "#D6763E"],
     ["Gardener", "3 plants", "#8967C7"],
     ["Collector", "4 species", "#C85F7A"],
-    ["Perfect", "100 points", "#D3A62B"],
+    ["Perfect", "100% complete", "#D3A62B"],
     ["Notebook", "20 notes", "#54BFA3"],
     ["Steady Week", "7-day streak", "#2F8C83"],
     ["Three Ways", "3 board types", "#5666A5"],
@@ -3617,25 +3617,25 @@ function GuideDetails({ locale }: { locale: Locale }) {
     en: {
       score: "Exact XP formula",
       formula:
-        "Score = round(min(recorded days ÷ goal days, 1) × 100). XP is simpler: each recorded day gives 1 XP when the board is completed. A 30-day board with 15 recorded days gives 50 points and 15 XP. Notes do not add points or XP. For an endless board, elapsed days at completion become the goal days.",
+        "Each recorded day gives 1 XP when the board is completed. A 30-day board with 5 recorded days gives 5 XP. Missed days and notes add no XP. Completion rate remains a percentage in Stats only. For an endless board, elapsed days at completion become the goal days.",
       badge: "Exact badge conditions",
     },
     ko: {
       score: "정확한 XP 계산식",
       formula:
-        "점수 = 반올림(min(기록일 수 ÷ 목표일 수, 1) × 100)이에요. XP는 더 단순하게 완료 시 기록한 하루마다 1 XP예요. 30일 보드에서 15일을 기록하면 50점과 15 XP를 받아요. 메모는 점수나 XP에 더해지지 않아요. 무기한 보드는 완료 시점까지 지난 일수를 목표일로 계산해요.",
+        "보드를 완료하면 기록한 하루마다 1 XP를 받아요. 30일 보드에서 5일을 기록하면 5 XP예요. 미기록일과 메모는 XP를 더하지 않아요. 완료율은 통계에서만 퍼센트로 보여요. 무기한 보드는 완료 시점까지 지난 일수를 목표일로 계산해요.",
       badge: "배지별 정확한 달성 조건",
     },
     zh: {
       score: "XP精确公式",
       formula:
-        "分数=四舍五入(min(记录天数÷目标天数,1)×100)。XP更简单：完成时每个记录日获得1 XP。30天记录15天可得50分和15 XP。笔记不增加分数或XP。",
+        "完成面板时，每个记录日获得1 XP。30天记录5天可得5 XP。未记录日和笔记不增加XP。完成率只在统计中显示为百分比。",
       badge: "徽章的准确条件",
     },
     ja: {
       score: "XPの正確な計算式",
       formula:
-        "スコア=round(min(記録日数÷目標日数,1)×100)。XPは完了時に記録した1日につき1 XPです。30日で15日記録すると50点・15 XPです。メモは点数やXPに加算されません。",
+        "ボード完了時、記録した1日につき1 XPを獲得します。30日で5日記録すると5 XPです。未記録日とメモはXPを増やしません。完了率は統計だけに％で表示します。",
       badge: "バッジの正確な条件",
     },
   }[locale];
@@ -3645,7 +3645,7 @@ function GuideDetails({ locale }: { locale: Locale }) {
       "Pixel — save 30 daily records in total.",
       "Gardener — complete 3 boards and collect 3 plants.",
       "Collector — collect 4 different plant species.",
-      "Perfect — complete one board with a 100-point score.",
+      "Perfect — record every goal day and finish one board at 100%.",
       "Notebook — save 20 records with a note.",
       "Steady Week — record 7 consecutive calendar days.",
       "Three Ways — complete Level, Yes/No, and Mood boards.",
@@ -3658,7 +3658,7 @@ function GuideDetails({ locale }: { locale: Locale }) {
       "Pixel — 일일 기록을 누적 30개 저장해요.",
       "Gardener — 보드 3개를 완료해 식물 3개를 모아요.",
       "Collector — 서로 다른 식물 종류 4개를 모아요.",
-      "Perfect — 100점으로 보드 하나를 완료해요.",
+      "Perfect — 목표일을 모두 기록해 완료율 100%로 보드 하나를 완료해요.",
       "Notebook — 메모가 있는 기록을 20개 저장해요.",
       "Steady Week — 달력 날짜 기준 7일 연속 기록해요.",
       "Three Ways — 1–5, 예/아니요, 기분 보드를 각각 완료해요.",
@@ -3671,7 +3671,7 @@ function GuideDetails({ locale }: { locale: Locale }) {
       "Pixel — 累计保存30条每日记录。",
       "Gardener — 完成3个面板并收集3株植物。",
       "Collector — 收集4种不同植物。",
-      "Perfect — 以100分完成一个面板。",
+      "Perfect — 记录全部目标日并以100%完成一个面板。",
       "Notebook — 保存20条带笔记的记录。",
       "Steady Week — 连续7个日历日记录。",
       "Three Ways — 分别完成三种面板。",
@@ -3684,7 +3684,7 @@ function GuideDetails({ locale }: { locale: Locale }) {
       "Pixel — 毎日の記録を累計30件保存します。",
       "Gardener — 3ボードを完了し植物を3個集めます。",
       "Collector — 異なる植物4種類を集めます。",
-      "Perfect — 100点で1ボードを完了します。",
+      "Perfect — 目標日をすべて記録し100%で1ボードを完了します。",
       "Notebook — メモ付き記録を20件保存します。",
       "Steady Week — 暦日で7日連続記録します。",
       "Three Ways — 3種類のボードを完了します。",
@@ -3758,7 +3758,7 @@ function GuideGardenActual({ locale }: { locale: Locale }) {
       earnedAt: today,
       boardId: 1,
       boardName: "Morning walk",
-      score: 92,
+      xpAwarded: 9,
     },
     {
       id: 2,
@@ -3772,7 +3772,7 @@ function GuideGardenActual({ locale }: { locale: Locale }) {
       earnedAt: today,
       boardId: 2,
       boardName: "Read books",
-      score: 100,
+      xpAwarded: 10,
     },
     {
       id: 3,
@@ -3786,7 +3786,7 @@ function GuideGardenActual({ locale }: { locale: Locale }) {
       earnedAt: today,
       boardId: 3,
       boardName: "Save money",
-      score: 84,
+      xpAwarded: 8,
     },
   ];
   return (
@@ -3809,7 +3809,7 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
       title: "One clear reward system",
       xp: "How to earn XP",
       formula:
-        "The score still shows completion rate. XP is 1 per recorded day and is awarded once when the board is completed. A 30-day board with 15 records gives 15 XP. Missed days, notes, and badges give no XP.",
+        "XP is 1 per recorded day and is awarded once when the board is completed. A 30-day board with 5 records gives 5 XP. Completion rate is shown only as a percentage in Stats. Missed days, notes, and badges give no XP.",
       grades: "XP grade and random plant pool",
       badges: "Each badge card shows its exact goal and new color.",
     },
@@ -3818,7 +3818,7 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
       title: "하나로 이해하는 보상 방식",
       xp: "XP를 받는 방법",
       formula:
-        "점수는 기록률을 보여주고, XP는 보드 완료 시 기록한 하루마다 1씩 받아요. 30일 보드에 15일 기록하면 15 XP예요. 미기록일, 메모와 배지는 XP를 주지 않아요.",
+        "보드를 완료할 때 기록한 하루마다 1 XP를 받아요. 30일 보드에 5일 기록하면 5 XP예요. 완료율은 통계에서만 퍼센트로 보여요. 미기록일, 메모와 배지는 XP를 주지 않아요.",
       grades: "XP 등급과 랜덤 식물 종류",
       badges: "각 배지 카드에서 정확한 목표와 추가 색상을 확인해요.",
     },
@@ -3827,7 +3827,7 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
       title: "简单统一的奖励规则",
       xp: "如何获得XP",
       formula:
-        "分数显示完成率。完成面板时，每个记录日获得1 XP。30天记录15天可得15 XP。未记录日、笔记和徽章不提供XP。",
+        "完成面板时，每个记录日获得1 XP。30天记录5天可得5 XP。完成率只在统计中显示为百分比。未记录日、笔记和徽章不提供XP。",
       grades: "XP等级和随机植物池",
       badges: "每张徽章卡显示准确目标和新增颜色。",
     },
@@ -3836,7 +3836,7 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
       title: "一つで分かる報酬ルール",
       xp: "XPの受け取り方",
       formula:
-        "スコアは記録率を示します。完了時に記録した1日につき1 XPを受け取ります。30日で15日記録なら15 XPです。未記録日、メモ、バッジはXPを付与しません。",
+        "完了時に記録した1日につき1 XPを受け取ります。30日で5日記録なら5 XPです。完了率は統計だけに％で表示します。未記録日、メモ、バッジはXPを付与しません。",
       grades: "XP等級とランダム植物プール",
       badges: "各バッジカードに正確な目標と追加色を表示します。",
     },
@@ -3855,7 +3855,7 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
       ["Pixel", "Save 30 daily records in total.", "Orange"],
       ["Gardener", "Complete 3 boards and collect 3 plants.", "Violet"],
       ["Collector", "Collect 4 different plant species.", "Rose"],
-      ["Perfect", "Complete one board with 100 points.", "Gold"],
+      ["Perfect", "Record every goal day and finish at 100%.", "Gold"],
       ["Notebook", "Save 20 records that include a note.", "Mint"],
       ["Steady Week", "Record on 7 consecutive calendar days.", "Teal"],
       ["Three Ways", "Complete Level, Yes/No, and Mood boards.", "Indigo"],
@@ -3872,7 +3872,7 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
       ["Pixel", "일일 기록을 누적 30개 저장해요.", "Orange"],
       ["Gardener", "보드 3개를 완료해 식물 3개를 모아요.", "Violet"],
       ["Collector", "서로 다른 식물 종류 4개를 모아요.", "Rose"],
-      ["Perfect", "100점으로 보드 하나를 완료해요.", "Gold"],
+      ["Perfect", "목표일을 모두 기록해 완료율 100%로 완료해요.", "Gold"],
       ["Notebook", "메모가 있는 기록을 20개 저장해요.", "Mint"],
       ["Steady Week", "달력 날짜 기준 7일 연속 기록해요.", "Teal"],
       ["Three Ways", "1–5, 예/아니요, 기분 보드를 각각 완료해요.", "Indigo"],
@@ -3885,7 +3885,7 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
       ["Pixel", "累计保存30条每日记录。", "Orange"],
       ["Gardener", "完成3个面板并收集3株植物。", "Violet"],
       ["Collector", "收集4种不同植物。", "Rose"],
-      ["Perfect", "以100分完成一个面板。", "Gold"],
+      ["Perfect", "记录全部目标日并以100%完成。", "Gold"],
       ["Notebook", "保存20条带笔记的记录。", "Mint"],
       ["Steady Week", "连续7个日历日记录。", "Teal"],
       ["Three Ways", "完成三种面板。", "Indigo"],
@@ -3898,7 +3898,7 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
       ["Pixel", "記録を累計30件保存します。", "Orange"],
       ["Gardener", "3ボードを完了します。", "Violet"],
       ["Collector", "異なる植物4種類を集めます。", "Rose"],
-      ["Perfect", "100点で1ボードを完了します。", "Gold"],
+      ["Perfect", "目標日をすべて記録し100%で完了します。", "Gold"],
       ["Notebook", "メモ付き記録を20件保存します。", "Mint"],
       ["Steady Week", "7日連続で記録します。", "Teal"],
       ["Three Ways", "3種類のボードを完了します。", "Indigo"],
@@ -4046,7 +4046,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       title: "Complete boards. Grow your plant pool.",
       xp: "How to earn XP",
       formula:
-        "The score shows completion rate. When you finish, each recorded day gives 1 XP once. A missed day gives 0 XP.",
+        "When you finish, each recorded day gives 1 XP once. Completion rate is shown only as a percentage in Stats. A missed day gives 0 XP.",
       grades: "XP grade and random plant species",
       equal: "All unlocked species have the same draw chance.",
       badges: "Badges add one new plant color.",
@@ -4057,7 +4057,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       title: "보드를 완료하고 식물 풀을 키워요.",
       xp: "XP를 받는 방법",
       formula:
-        "점수는 기록률을 보여줘요. 보드를 완료하면 기록한 하루마다 1 XP를 한 번 받고, 기록하지 않은 날은 0 XP예요.",
+        "보드를 완료하면 기록한 하루마다 1 XP를 한 번 받아요. 완료율은 통계에서만 퍼센트로 보여주고, 기록하지 않은 날은 0 XP예요.",
       grades: "XP 등급과 랜덤 식물 종류",
       equal: "해금된 모든 식물은 동일한 확률로 추첨돼요.",
       badges: "배지는 식물 색상을 하나씩 추가해요.",
@@ -4068,7 +4068,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       title: "完成面板，扩大植物池。",
       xp: "如何获得XP",
       formula:
-        "分数显示完成率。完成面板时，每个记录日获得1 XP，未记录日为0 XP。",
+        "完成面板时，每个记录日获得1 XP。完成率只在统计中显示为百分比，未记录日为0 XP。",
       grades: "XP等级和随机植物种类",
       equal: "所有已解锁植物的抽取概率相同。",
       badges: "徽章会增加一种植物颜色。",
@@ -4079,7 +4079,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       title: "ボードを完了して植物プールを育てます。",
       xp: "XPの受け取り方",
       formula:
-        "スコアは記録率を示します。完了時に記録した1日につき1 XPを受け取り、未記録日は0 XPです。",
+        "完了時に記録した1日につき1 XPを受け取ります。完了率は統計だけに％で表示し、未記録日は0 XPです。",
       grades: "XP等級とランダム植物種類",
       equal: "解放済み植物はすべて同じ確率で抽選されます。",
       badges: "バッジは植物カラーを一つ追加します。",
@@ -4114,7 +4114,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       ["Pixel", "Save 30 daily records.", "Orange"],
       ["Gardener", "Complete 3 boards.", "Violet"],
       ["Collector", "Collect 4 species.", "Rose"],
-      ["Perfect", "Complete a board with 100 points.", "Gold"],
+      ["Perfect", "Record every goal day and finish at 100%.", "Gold"],
       ["Notebook", "Write 20 notes.", "Mint"],
       ["Steady Week", "Record 7 days in a row.", "Teal"],
       ["Three Ways", "Complete all 3 board types.", "Indigo"],
@@ -4127,7 +4127,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       ["Pixel", "일일 기록 30개를 저장해요.", "Orange"],
       ["Gardener", "보드 3개를 완료해요.", "Violet"],
       ["Collector", "식물 4종을 모아요.", "Rose"],
-      ["Perfect", "100점 보드를 완료해요.", "Gold"],
+      ["Perfect", "목표일을 모두 기록해 완료율 100%로 완료해요.", "Gold"],
       ["Notebook", "메모 20개를 작성해요.", "Mint"],
       ["Steady Week", "7일 연속 기록해요.", "Teal"],
       ["Three Ways", "보드 3종을 모두 완료해요.", "Indigo"],
@@ -4140,7 +4140,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       ["Pixel", "保存30条记录。", "Orange"],
       ["Gardener", "完成3个面板。", "Violet"],
       ["Collector", "收集4种植物。", "Rose"],
-      ["Perfect", "完成一个100分面板。", "Gold"],
+      ["Perfect", "记录全部目标日并以100%完成。", "Gold"],
       ["Notebook", "写20条笔记。", "Mint"],
       ["Steady Week", "连续记录7天。", "Teal"],
       ["Three Ways", "完成3种面板。", "Indigo"],
@@ -4153,7 +4153,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       ["Pixel", "記録を30件保存。", "Orange"],
       ["Gardener", "3ボードを完了。", "Violet"],
       ["Collector", "植物を4種類収集。", "Rose"],
-      ["Perfect", "100点ボードを完了。", "Gold"],
+      ["Perfect", "目標日をすべて記録し100%で完了。", "Gold"],
       ["Notebook", "メモを20件作成。", "Mint"],
       ["Steady Week", "7日連続記録。", "Teal"],
       ["Three Ways", "3種類を完了。", "Indigo"],

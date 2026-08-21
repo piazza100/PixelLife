@@ -6,7 +6,7 @@ export type ApiBoard = {
 export type ApiEntry = {entryDate:string;numericValue:number|null;success:boolean|null;emoji:string|null;note:string|null}
 export type BoardDetail = {board:ApiBoard;entries:ApiEntry[]}
 
-export type RewardPlant = {id:number;speciesCode:string;speciesName:string;symbol:string;colorCode:string;cssColor:string;mapX:number;mapY:number;earnedAt:string;boardId:number;boardName:string;score:number}
+export type RewardPlant = {id:number;speciesCode:string;speciesName:string;symbol:string;colorCode:string;cssColor:string;mapX:number;mapY:number;earnedAt:string;boardId:number;boardName:string;xpAwarded:number}
 export type RewardBadge = {code:string;name:string;description:string;earned:boolean|number;currentValue:number;targetValue:number;unlockColor:string}
 export type RewardSpecies = {code:string;name:string;symbol:string;weightValue:number;chance:number}
 export type RewardColor = {code:string;cssColor:string;sortOrder:number}
