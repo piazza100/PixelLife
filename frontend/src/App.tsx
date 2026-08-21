@@ -125,7 +125,7 @@ const words = {
     sub: "보드를 골라 오늘을 기록하세요.",
     new: "＋ 새 보드",
     active: "진행 중",
-    archived: "종료된 보드",
+    archived: "완료된 보드",
     archiveHelp: "끝난 보드는 여기에서 다시 볼 수 있어요.",
     day: "일차",
     ready: "시작할 준비가 됐어요",
@@ -134,8 +134,8 @@ const words = {
     wins: "회 기록",
     plus: "Plus 이용 중",
     plusSub: "활성 보드 최대 30개",
-    myBoards: "내 보드",
-    back: "← 내 보드",
+    myBoards: "진행 중 보드",
+    back: "← 진행 중 보드",
     newBoard: "새 보드",
     question: "무엇을 꾸준히\n하고 싶나요?",
     name: "보드 이름",
@@ -644,7 +644,7 @@ const screenWords: Record<Locale, Record<string, string>> = {
     fit: "Fit",
   },
   ko: {
-    allActive: "전체 활성 보드",
+    allActive: "전체 진행 보드",
     complete: "완료",
     allFinished: "전체 완료 보드",
     completedMove: "완료된 보드의 식물은 식물원으로 이동해요.",
@@ -885,12 +885,30 @@ function App() {
   const [notice, setNotice] = useState("");
   const [boards, setBoards] = useState<Board[]>(loadGuestBoards);
   const [selected, setSelected] = useState("");
+  const detailReturnView = useRef<View>("home");
   const [view, setView] = useState<View>(() =>
     location.hash === "#test" ? "admin" : "home",
   );
+  const viewScrollY = useRef<Partial<Record<View, number>>>({ home: 0 });
+  const navigate = (next: View, reset = false) => {
+    if (next === view) return;
+    viewScrollY.current[view] = window.scrollY;
+    if (reset) viewScrollY.current[next] = 0;
+    setView(next);
+  };
+  useEffect(() => {
+    const restore = () =>
+      window.scrollTo({ top: viewScrollY.current[view] ?? 0 });
+    const frame = requestAnimationFrame(() => requestAnimationFrame(restore));
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [view]);
   const importAsked = useRef(false);
   useEffect(() => {
     let alive = true;
+    let retryTimer = 0;
+    let retryCount = 0;
     const load = async () => {
       const guest = loadGuestBoards();
       try {
@@ -960,6 +978,10 @@ function App() {
           );
         }
         if (!alive) return;
+        retryCount = 0;
+        setNotice((current) =>
+          current === extraWords[locale].serverWaking ? "" : current,
+        );
         setMember(account);
         setRewards(data.rewards);
         setBoards(loaded);
@@ -972,9 +994,17 @@ function App() {
         setRewards(null);
         setBoards(guest);
         setSelected(guest[0]?.id || "");
-        if (error instanceof ApiError && error.status === 0)
+        if (error instanceof ApiError && error.status !== 0)
+          setNotice((current) =>
+            current === extraWords[locale].serverWaking ? "" : current,
+          );
+        if (error instanceof ApiError && error.status === 0) {
           setNotice(extraWords[locale].serverWaking);
-        else if (!(error instanceof ApiError && error.status === 401)) {
+          if (retryCount < 5) {
+            retryCount += 1;
+            retryTimer = window.setTimeout(load, 2500);
+          }
+        } else if (!(error instanceof ApiError && error.status === 401)) {
           console.error("PixelLife initial load failed", error);
           setNotice("Could not load your account data.");
         }
@@ -983,6 +1013,7 @@ function App() {
     load();
     return () => {
       alive = false;
+      window.clearTimeout(retryTimer);
     };
   }, []);
   useEffect(() => {
@@ -1036,7 +1067,7 @@ function App() {
     if (!member) return;
     const status = document.querySelector<HTMLElement>(".reward-status");
     if (!status) return;
-    const openRewards = () => setView("rewards");
+    const openRewards = () => navigate("rewards", true);
     const keyboard = (event: KeyboardEvent) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
@@ -1108,8 +1139,10 @@ function App() {
   };
   (t as any).hasToday = board.entries.some((e) => e.date === today);
   const open = (id: string) => {
+    detailReturnView.current =
+      view === "active-list" || view === "finished-list" ? view : "home";
     setSelected(id);
-    setView("detail");
+    navigate("detail", true);
     setNote("");
     setSaved(false);
   };
@@ -1167,7 +1200,7 @@ function App() {
         setSelected(id);
       }
       setTitle("");
-      setView("detail");
+      navigate("detail", true);
     } catch (error) {
       showError(error, "Could not make this board");
     } finally {
@@ -1237,7 +1270,7 @@ function App() {
       setBoards((v) =>
         v.map((b) => (b.id === board.id ? { ...b, status: "COMPLETED" } : b)),
       );
-      setView("home");
+      navigate("home");
     } catch (error) {
       showError(error, t.finishError);
     } finally {
@@ -1255,7 +1288,7 @@ function App() {
       }
       setBoards((v) => v.filter((b) => b.id !== board.id));
       setSelected("");
-      setView("home");
+      navigate("home");
     } catch (error) {
       showError(error, t.deleteError);
     } finally {
@@ -1295,13 +1328,20 @@ function App() {
   return (
     <div className={`app ${busy ? "is-busy" : ""}`} aria-busy={busy}>
       <header>
-        <button className="brand" onClick={() => setView("home")}>
+        <button className="brand" onClick={() => navigate("home")}>
           <BrandMark />
           PixelLife
         </button>
         <div className="plan">
-          <nav className="help-nav">
-            <button onClick={() => setView("guide")}>{t.guide}</button>
+          <nav className={`help-nav ${view === "guide" ? "guide-mode" : ""}`}>
+            <button
+              className={view === "guide" ? "guide-close" : ""}
+              onClick={() =>
+                view === "guide" ? navigate("home") : navigate("guide", true)
+              }
+            >
+              {view === "guide" ? t.home : t.guide}
+            </button>
           </nav>
           <label className="language">
             <span>◎</span>
@@ -1329,7 +1369,7 @@ function App() {
               <b>{member.effectivePlan}</b>
               <button
                 className="account-link"
-                onClick={() => setView("account")}
+                onClick={() => navigate("account", true)}
               >
                 {t.account}
               </button>
@@ -1364,7 +1404,7 @@ function App() {
               </h1>
               <p>{t.sub}</p>
             </div>
-            <button className="new-button" onClick={() => setView("setup")}>
+            <button className="new-button" onClick={() => navigate("setup", true)}>
               {t.new}
             </button>
           </section>
@@ -1376,7 +1416,7 @@ function App() {
               </span>
             </div>
             {active.length > 4 && (
-              <button onClick={() => setView("active-list")}>
+              <button onClick={() => navigate("active-list", true)}>
                 {t.allActive} ({active.length}) →
               </button>
             )}
@@ -1396,8 +1436,8 @@ function App() {
             boards={active}
             plants={plants}
             t={t}
-            onGrowing={() => setView("garden-list")}
-            onComplete={() => setView("conservatory-list")}
+            onGrowing={() => navigate("garden-list", true)}
+            onComplete={() => navigate("conservatory-list", true)}
           />
           {archived.length > 0 && (
             <section className="archive">
@@ -1408,7 +1448,7 @@ function App() {
                     {archived.length} {t.complete}
                   </span>
                 </div>
-                <button onClick={() => setView("finished-list")}>
+                <button onClick={() => navigate("finished-list", true)}>
                   {t.allFinished} ({archived.length}) →
                 </button>
               </div>
@@ -1420,12 +1460,12 @@ function App() {
                       {b.inputType === "level"
                         ? "1–5"
                         : b.inputType === "check"
-                          ? "✓"
+                          ? "✓ ×"
                           : "☺"}
                     </span>
                     <b>{b.title}</b>
                     <small>
-                      {b.startDate} — {endDate(b)}
+                      {t.period}: {b.goalDays === null ? "∞" : `${b.goalDays} ${t.days}`} · {b.startDate} ~ {endDate(b)}
                     </small>
                   </button>
                 ))}
@@ -1450,7 +1490,7 @@ function App() {
       )}
       {(view === "active-list" || view === "finished-list") && (
         <main className={`board-list-page ${view}`}>
-          <button className="back" onClick={() => setView("home")}>
+          <button className="back" onClick={() => navigate("home")}>
             {t.home}
           </button>
           <section className="list-title">
@@ -1483,7 +1523,7 @@ function App() {
       )}
       {(view === "garden-list" || view === "conservatory-list") && (
         <main className="board-list-page">
-          <button className="back" onClick={() => setView("home")}>
+          <button className="back" onClick={() => navigate("home")}>
             {t.home}
           </button>
           <section className="list-title">
@@ -1508,8 +1548,8 @@ function App() {
         <>
           <GuidePage
             locale={locale}
-            onBack={() => setView("home")}
-            onStart={() => setView("setup")}
+            onBack={() => navigate("home")}
+            onStart={() => navigate("setup", true)}
             onRewards={() => {}}
           />
           <GuideSamples locale={locale} />
@@ -1523,11 +1563,11 @@ function App() {
           <RewardsPage
             rewards={rewards}
             locale={locale}
-            onBack={() => setView("home")}
+            onBack={() => navigate("home")}
           />
         ) : (
           <main className="guide-page">
-            <button className="back" onClick={() => setView("home")}>
+            <button className="back" onClick={() => navigate("home")}>
               {t.home}
             </button>
             <section className="guide-hero">
@@ -1545,7 +1585,7 @@ function App() {
         <AccountPage
           member={member}
           locale={locale}
-          onBack={() => setView("home")}
+          onBack={() => navigate("home")}
           onPortal={async () => {
             if (busy) return;
             setBusy(true);
@@ -1583,7 +1623,7 @@ function App() {
           currentUserId={member.id}
           onBack={() => {
             history.replaceState(null, "", location.pathname);
-            setView("home");
+            navigate("home");
           }}
         />
       )}
@@ -1603,19 +1643,19 @@ function App() {
         <LegalPagePlan
           kind="privacy"
           locale={locale}
-          onBack={() => setView("home")}
+          onBack={() => navigate("home")}
         />
       )}
       {view === "terms" && (
         <LegalPagePlan
           kind="terms"
           locale={locale}
-          onBack={() => setView("home")}
+          onBack={() => navigate("home")}
         />
       )}
       {view === "setup" && (
         <main className="setup">
-          <button className="back" onClick={() => setView("home")}>
+          <button className="back" onClick={() => navigate("home")}>
             {t.back}
           </button>
           <section className="setup-card">
@@ -1718,7 +1758,7 @@ function App() {
               </label>
             )}
             <div className="actions">
-              <button onClick={() => setView("home")}>{t.cancel}</button>
+              <button onClick={() => navigate("home")}>{t.cancel}</button>
               <button className="primary" onClick={add}>
                 {t.make}
               </button>
@@ -1743,15 +1783,22 @@ function App() {
           onSave={save}
           onFinish={finish}
           onDelete={removeBoard}
-          onBack={() => setView("home")}
+          backLabel={
+            detailReturnView.current === "active-list"
+              ? `← ${t.allActive}`
+              : detailReturnView.current === "finished-list"
+                ? `← ${t.allFinished}`
+                : t.home
+          }
+          onBack={() => navigate(detailReturnView.current)}
         />
       )}
       <footer>
         <b>PixelLife</b>
         <span>Small days. Big life.</span>
         <nav>
-          <button onClick={() => setView("privacy")}>{t.privacy}</button>
-          <button onClick={() => setView("terms")}>{t.terms}</button>
+          <button onClick={() => navigate("privacy", true)}>{t.privacy}</button>
+          <button onClick={() => navigate("terms", true)}>{t.terms}</button>
         </nav>
       </footer>
       {busy && <div className="busy-bar" aria-hidden="true" />}
@@ -2169,8 +2216,8 @@ function GuidePage({
         ["패턴 보기", "통계에서 기록률과 기록 방식별 차트를 봐요."],
         ["식물 키우기", "보드 하나가 자신의 기록으로 식물 하나를 키워요."],
         [
-          "종료하고 수집하기",
-          "종료된 보드는 읽기 전용이 되고 식물은 식물원으로 이동해요.",
+          "완료하고 수집하기",
+          "완료된 보드는 읽기 전용이 되고 식물은 식물원으로 이동해요.",
         ],
       ],
     },
@@ -2473,7 +2520,7 @@ function BoardCard({
             {t.period}: {board.goalDays === null ? "∞" : `${board.goalDays} ${t.days}`}
           </span>
           <span>
-            {board.startDate} → {endDate(board) || "∞"}
+            {board.startDate} ~ {endDate(board) || "∞"}
           </span>
         </small>
       </div>
@@ -2717,6 +2764,7 @@ function Detail({
   onSave,
   onFinish,
   onDelete,
+  backLabel,
   onBack,
 }: {
   board: Board;
@@ -2734,6 +2782,7 @@ function Detail({
   onSave: () => void;
   onFinish: () => void;
   onDelete: () => void;
+  backLabel: string;
   onBack: () => void;
 }) {
   t.inputType = board.inputType;
@@ -2898,7 +2947,7 @@ function Detail({
       style={{ "--board-color": board.color } as React.CSSProperties}
     >
       <button className="back" onClick={onBack}>
-        {t.back}
+        {backLabel}
       </button>
       <nav className="detail-tabs">
         <button
@@ -2929,14 +2978,22 @@ function Detail({
             <div className="detail-head">
               <div>
                 <p className="eyebrow">
-                  {t.day} {days} · {t.rolling}
+                  {t.day} {days} · {isFinished(board) ? t.completed : t.rolling}
                 </p>
                 <h1>{board.title}</h1>
+                <p className="detail-summary">
+                  <span>
+                    {wins} {t.wins}
+                  </span>
+                  <span>
+                    {t.period}: {board.goalDays === null ? "∞" : `${board.goalDays} ${t.days}`} · {board.startDate} ~ {endDate(board) || "∞"}
+                  </span>
+                </p>
                 <p>{wins === 0 ? t.first : wins === 1 ? t.again : t.moving}</p>
               </div>
               <span className="range">
                 {calendar[0].k}
-                <br />— {calendar.at(-1)?.k}
+                <br />~ {calendar.at(-1)?.k}
               </span>
             </div>
             {page < maxPage && (
@@ -3222,7 +3279,7 @@ function Stats({
             {rate >= 70 ? t.well : rate >= 35 ? t.returnCounts : t.restart}
           </h1>
           <p className="stats-board-dates">
-            {board.startDate} → {endDate(board) || "∞"}
+            {board.startDate} ~ {endDate(board) || "∞"}
           </p>
           <div className="period-stats">
             <span>
@@ -3477,6 +3534,7 @@ function GuideRewardRules({ locale }: { locale: Locale }) {
     en: {
       eye: "PLANTS, XP & BADGES",
       title: "Complete boards. Grow what can appear next.",
+      xpUnit: "1 RECORD = 1 XP",
       xp: "How XP works",
       xpText:
         "Finish a board once to receive 1 XP for each recorded day. A missed day gives 0 XP. Badges do not give XP.",
@@ -3492,6 +3550,7 @@ function GuideRewardRules({ locale }: { locale: Locale }) {
     ko: {
       eye: "식물, XP와 배지",
       title: "보드를 완료하고 다음 식물의 가능성을 키워요.",
+      xpUnit: "1 기록 = 1 XP",
       xp: "XP를 받는 방법",
       xpText:
         "보드를 완료할 때 기록한 하루마다 1 XP를 한 번 받아요. 기록하지 않은 날은 0 XP이며 배지는 XP를 주지 않아요.",
@@ -3507,6 +3566,7 @@ function GuideRewardRules({ locale }: { locale: Locale }) {
     zh: {
       eye: "植物、XP和徽章",
       title: "完成面板，扩大下一株植物的可能。",
+      xpUnit: "1 条记录 = 1 XP",
       xp: "如何获得XP",
       xpText:
         "完成面板时，每个已记录日期获得1 XP。未记录日期为0 XP，徽章不提供XP。",
@@ -3521,6 +3581,7 @@ function GuideRewardRules({ locale }: { locale: Locale }) {
     ja: {
       eye: "植物・XP・バッジ",
       title: "ボードを完了して次の植物の可能性を増やします。",
+      xpUnit: "1 記録 = 1 XP",
       xp: "XPの受け取り方",
       xpText:
         "ボード完了時に、記録した1日につき1 XPを一度だけ受け取ります。未記録日は0 XPで、バッジはXPを付与しません。",
@@ -3560,7 +3621,7 @@ function GuideRewardRules({ locale }: { locale: Locale }) {
       <p className="eyebrow">{c.eye}</p>
       <h2>{c.title}</h2>
       <article className="xp-rule">
-        <b>1 RECORD = 1 XP</b>
+        <b>{c.xpUnit}</b>
         <div>
           <h3>{c.xp}</h3>
           <p>{c.xpText}</p>
@@ -3812,6 +3873,7 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
     en: {
       eye: "XP, GRADES & BADGES",
       title: "One clear reward system",
+      xpUnit: "1 RECORD = 1 XP",
       xp: "How to earn XP",
       formula:
         "XP is 1 per recorded day and is awarded once when the board is completed. A 30-day board with 5 records gives 5 XP. Completion rate is shown only as a percentage in Stats. Missed days, notes, and badges give no XP.",
@@ -3821,6 +3883,7 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
     ko: {
       eye: "XP, 등급과 배지",
       title: "하나로 이해하는 보상 방식",
+      xpUnit: "1 기록 = 1 XP",
       xp: "XP를 받는 방법",
       formula:
         "보드를 완료할 때 기록한 하루마다 1 XP를 받아요. 30일 보드에 5일 기록하면 5 XP예요. 완료율은 통계에서만 퍼센트로 보여요. 미기록일, 메모와 배지는 XP를 주지 않아요.",
@@ -3830,6 +3893,7 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
     zh: {
       eye: "XP、等级和徽章",
       title: "简单统一的奖励规则",
+      xpUnit: "1 条记录 = 1 XP",
       xp: "如何获得XP",
       formula:
         "完成面板时，每个记录日获得1 XP。30天记录5天可得5 XP。完成率只在统计中显示为百分比。未记录日、笔记和徽章不提供XP。",
@@ -3839,6 +3903,7 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
     ja: {
       eye: "XP・等級・バッジ",
       title: "一つで分かる報酬ルール",
+      xpUnit: "1 記録 = 1 XP",
       xp: "XPの受け取り方",
       formula:
         "完了時に記録した1日につき1 XPを受け取ります。30日で5日記録なら5 XPです。完了率は統計だけに％で表示します。未記録日、メモ、バッジはXPを付与しません。",
@@ -3930,7 +3995,7 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
       <p className="eyebrow">{c.eye}</p>
       <h2>{c.title}</h2>
       <article className="guide-xp">
-        <b>1 RECORD = 1 XP</b>
+        <b>{c.xpUnit}</b>
         <div>
           <h3>{c.xp}</h3>
           <p>{c.formula}</p>
@@ -4049,6 +4114,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
     en: {
       eye: "XP, GRADES & PLANTS",
       title: "Complete boards. Grow your plant pool.",
+      xpUnit: "1 RECORD = 1 XP",
       xp: "How to earn XP",
       formula:
         "When you finish, each recorded day gives 1 XP once. Completion rate is shown only as a percentage in Stats. A missed day gives 0 XP.",
@@ -4060,6 +4126,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
     ko: {
       eye: "XP, 등급과 식물",
       title: "보드를 완료하고 식물 풀을 키워요.",
+      xpUnit: "1 기록 = 1 XP",
       xp: "XP를 받는 방법",
       formula:
         "보드를 완료하면 기록한 하루마다 1 XP를 한 번 받아요. 완료율은 통계에서만 퍼센트로 보여주고, 기록하지 않은 날은 0 XP예요.",
@@ -4071,6 +4138,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
     zh: {
       eye: "XP、等级和植物",
       title: "完成面板，扩大植物池。",
+      xpUnit: "1 条记录 = 1 XP",
       xp: "如何获得XP",
       formula:
         "完成面板时，每个记录日获得1 XP。完成率只在统计中显示为百分比，未记录日为0 XP。",
@@ -4082,6 +4150,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
     ja: {
       eye: "XP・等級・植物",
       title: "ボードを完了して植物プールを育てます。",
+      xpUnit: "1 記録 = 1 XP",
       xp: "XPの受け取り方",
       formula:
         "完了時に記録した1日につき1 XPを受け取ります。完了率は統計だけに％で表示し、未記録日は0 XPです。",
@@ -4185,7 +4254,7 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
       <p className="eyebrow">{c.eye}</p>
       <h2>{c.title}</h2>
       <article className="guide-xp">
-        <b>1 RECORD = 1 XP</b>
+        <b>{c.xpUnit}</b>
         <div>
           <h3>{c.xp}</h3>
           <p>{c.formula}</p>
@@ -4853,7 +4922,7 @@ function TestAdminPage({
                   {board.type} · {board.status}
                 </span>
                 <small>
-                  {board.startDate} → {board.endDate || "∞"} ·{" "}
+                  {board.startDate} ~ {board.endDate || "∞"} ·{" "}
                   {board.recordCount} records
                 </small>
               </button>

@@ -1184,6 +1184,18 @@ footer b {
   color: #687168;
   font-weight: 700;
 }
+.detail-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  margin: 7px 0 0 !important;
+  color: #667068 !important;
+  font: 700 9px "DM Mono" !important;
+}
+.detail-summary + p {
+  margin-top: 6px !important;
+}
 .check-today {
   width: 100%;
   padding: 14px;
@@ -1740,6 +1752,25 @@ footer b {
 .help-nav button:hover {
   color: #159651;
 }
+.help-nav button.guide-close {
+  color: #0d7040;
+}
+.help-nav.guide-mode {
+  position: fixed;
+  z-index: 30;
+  right: 18px;
+  bottom: 18px;
+  padding: 4px;
+  border: 1px solid rgba(21, 150, 81, 0.14);
+  border-radius: 12px;
+  background: #e5f3e9;
+  box-shadow: 0 8px 24px rgba(20, 25, 21, 0.16);
+}
+.help-nav.guide-mode button {
+  min-height: 38px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
 .list-heading {
   display: flex;
   align-items: center;
@@ -1756,16 +1787,6 @@ footer b {
   color: #16834a;
   font: 500 9px "DM Mono";
   white-space: nowrap;
-}
-.finished-list > .cards:before {
-  content: "ALL 4 COMPLETED BOARDS";
-  grid-column: 1/-1;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: #e9e6de;
-  color: #73776f;
-  font: 500 8px "DM Mono";
-  letter-spacing: 1px;
 }
 .guide-page {
   width: min(980px, calc(100% - 36px));
@@ -2097,8 +2118,14 @@ footer b {
     bottom: 13px;
     padding: 4px;
     border-radius: 10px;
-    background: #fff;
+    background: #e5f3e9;
     box-shadow: 0 5px 20px rgba(20, 25, 21, 0.15);
+  }
+  .help-nav button {
+    min-height: 38px;
+    padding: 8px 12px;
+    color: #0d7040;
+    font-size: 10px;
   }
   .plan {
     gap: 6px;
@@ -2125,9 +2152,6 @@ footer b {
   .list-heading {
     align-items: flex-start;
     flex-direction: column;
-  }
-  .finished-list > .cards:before {
-    content: "ALL 4 COMPLETED BOARDS";
   }
   .conservatory-list {
     grid-template-columns: repeat(2, 1fr);
@@ -3753,5 +3777,31 @@ body[data-board-type="check"] .detail-head h1:before {
   }
   .board-card.compact {
     min-height: 142px !important;
+  }
+}
+
+/* Keep the long-page escape action reachable on mobile. */
+@media (max-width: 760px) {
+  .help-nav {
+    position: fixed;
+    z-index: 30;
+    right: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    width: auto;
+    padding: 4px;
+    border: 1px solid rgba(21, 150, 81, 0.14);
+    border-radius: 12px;
+    background: #e5f3e9;
+    box-shadow: 0 8px 24px rgba(20, 25, 21, 0.16);
+  }
+  .help-nav button,
+  .help-nav button.guide-close {
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 0;
+    background: transparent;
+    color: #0d7040;
+    font-size: 10px;
+    white-space: nowrap;
   }
 }
