@@ -13,7 +13,7 @@ export type RewardColor = {code:string;cssColor:string;sortOrder:number}
 export type RewardGrade = {code:string;xp:number;species:number}
 export type RewardData = {totalXp:number;gradeCode:string;badges:RewardBadge[];plants:RewardPlant[];speciesPool:RewardSpecies[];unlockedColors:RewardColor[];gradeGuide:RewardGrade[]}
 
-export type Member = {id:number;email:string;displayName:string;avatarUrl?:string;effectivePlan:'FREE'|'PLUS';activeBoardLimit:3|10}
+export type Member = {id:number;email:string;displayName:string;avatarUrl?:string;effectivePlan:'FREE'|'PLUS';activeBoardLimit:3|10;paidUntil?:string|null}
 export type TestUser = {id:number;email:string;displayName:string;plan:'FREE'|'PLUS';paidUntil:string|null;totalXp:number;gradeCode:string;createdAt:string}
 export type TestBoard = {id:number;name:string;type:'LEVEL'|'CHECK'|'MOOD';status:'ACTIVE'|'COMPLETED';startDate:string;endDate:string|null;goalDays:number|null;recordCount:number}
 
@@ -46,7 +46,7 @@ async function request<T>(path:string,init?:RequestInit):Promise<T>{
 
 export const pixelLifeApi={
   me:(locale='en')=>request<Member>(`/me?locale=${locale}`),
-  bootstrap:(locale='en')=>request<{member:Member;boards:ApiBoard[];entries:Array<ApiEntry&{boardId:number}>;rewards:RewardData}>(`/bootstrap?locale=${locale}`),
+  bootstrap:(locale='en')=>request<{member:Member;boards:ApiBoard[];entries:Array<ApiEntry&{boardId:number}>;rewards?:RewardData}>(`/bootstrap?locale=${locale}`),
   createBoard:(body:{name:string;type:'LEVEL'|'CHECK'|'MOOD';startDate:string;goalDays:number|null})=>request<ApiBoard>('/boards',{method:'POST',body:JSON.stringify(body)}),
   importGuestBoard:(body:{name:string;type:'LEVEL'|'CHECK'|'MOOD';startDate:string;goalDays:number|null;entries:Array<{date:string;value?:number;success?:boolean;emoji?:string;note?:string}>})=>request<ApiBoard>('/boards/import',{method:'POST',body:JSON.stringify(body)}),
   getBoard:(id:number)=>request<BoardDetail>(`/boards/${id}`),

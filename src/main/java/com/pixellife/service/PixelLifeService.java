@@ -51,10 +51,10 @@ public class PixelLifeService {
         if (mapper.deleteMember(userId) != 1) throw new IllegalStateException("Account could not be deleted");
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Map<String, Object> bootstrap(long userId) {
         Map<String,Object> account = member(userId);
-        return Map.of("member", account, "boards", mapper.findBoards(userId), "entries", mapper.findEntriesForUser(userId), "rewards", rewards(userId, account));
+        return Map.of("member", account, "boards", mapper.findBoards(userId), "entries", mapper.findEntriesForUser(userId));
     }
 
     @Transactional

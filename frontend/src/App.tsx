@@ -571,6 +571,23 @@ const actionWords: Record<Locale, Record<string, string>> = {
     deleteError: "Could not delete this board",
     deleteHelp: "Delete this unfinished board to make a new one.",
     accountLoadError: "Could not load your account data.",
+    importGuest: "Save {count} guest boards to this membership?",
+    rewardsLoadError: "Could not load rewards.",
+    resetError: "Could not reset today.",
+    createError: "Could not create the board.",
+    saveError: "Could not save today.",
+    billingError: "Could not open billing.",
+    checkoutError: "Checkout is not ready yet.",
+    sessionEnded: "Your session ended. Please sign in again.",
+    withdrawConfirm:
+      "Leave PixelLife? Every board, record, plant, badge, and XP will be permanently removed.",
+    withdrawFinal: "This cannot be undone. Do you still want to leave?",
+    withdrawError: "Could not complete membership withdrawal.",
+    withdrawBlocked:
+      "Cancel Plus first. You can leave after the already-paid period ends.",
+    badgeListLabel: "View my badges",
+    growthLabel: "My growth",
+    badgeUnit: "badges",
   },
   ko: {
     completeBoard: "보드 완료",
@@ -581,6 +598,23 @@ const actionWords: Record<Locale, Record<string, string>> = {
     deleteError: "보드를 삭제하지 못했어요",
     deleteHelp: "완료하지 않은 보드를 삭제하고 새 보드를 만들 수 있어요.",
     accountLoadError: "계정 데이터를 불러오지 못했어요.",
+    importGuest: "비회원 보드 {count}개를 이 회원 정보에 저장할까요?",
+    rewardsLoadError: "보상 정보를 불러오지 못했어요.",
+    resetError: "오늘 기록을 초기화하지 못했어요.",
+    createError: "보드를 만들지 못했어요.",
+    saveError: "오늘 기록을 저장하지 못했어요.",
+    billingError: "결제 관리 화면을 열지 못했어요.",
+    checkoutError: "결제 화면을 준비하지 못했어요.",
+    sessionEnded: "로그인이 만료됐어요. 다시 로그인해 주세요.",
+    withdrawConfirm:
+      "PixelLife에서 탈퇴할까요? 모든 보드, 기록, 식물, 배지와 XP가 영구 삭제돼요.",
+    withdrawFinal: "되돌릴 수 없어요. 그래도 회원 탈퇴할까요?",
+    withdrawError: "회원 탈퇴를 완료하지 못했어요.",
+    withdrawBlocked:
+      "Plus를 먼저 해지해 주세요. 이미 결제한 이용 기간이 끝난 뒤 탈퇴할 수 있어요.",
+    badgeListLabel: "내 배지 목록 보기",
+    growthLabel: "나의 성장",
+    badgeUnit: "배지",
   },
   zh: {
     completeBoard: "完成面板",
@@ -590,6 +624,22 @@ const actionWords: Record<Locale, Record<string, string>> = {
     deleteError: "无法删除面板",
     deleteHelp: "删除未完成的面板后可以创建新面板。",
     accountLoadError: "无法加载账户数据。",
+    importGuest: "要将{count}个访客面板保存到此会员账户吗？",
+    rewardsLoadError: "无法加载奖励信息。",
+    resetError: "无法重置今天的记录。",
+    createError: "无法创建面板。",
+    saveError: "无法保存今天的记录。",
+    billingError: "无法打开付款管理页面。",
+    checkoutError: "结账页面尚未准备好。",
+    sessionEnded: "登录已过期，请重新登录。",
+    withdrawConfirm:
+      "要退出PixelLife会员吗？所有面板、记录、植物、徽章和XP都将永久删除。",
+    withdrawFinal: "此操作无法撤销，仍要退出会员吗？",
+    withdrawError: "无法完成会员注销。",
+    withdrawBlocked: "请先取消Plus。已付费使用期结束后即可退出会员。",
+    badgeListLabel: "查看我的徽章",
+    growthLabel: "我的成长",
+    badgeUnit: "枚徽章",
   },
   ja: {
     completeBoard: "ボードを完了",
@@ -600,6 +650,23 @@ const actionWords: Record<Locale, Record<string, string>> = {
     deleteError: "ボードを削除できませんでした",
     deleteHelp: "未完了のボードを削除して新しいボードを作れます。",
     accountLoadError: "アカウントデータを読み込めませんでした。",
+    importGuest: "ゲストボード{count}個をこの会員情報に保存しますか？",
+    rewardsLoadError: "報酬情報を読み込めませんでした。",
+    resetError: "今日の記録をリセットできませんでした。",
+    createError: "ボードを作成できませんでした。",
+    saveError: "今日の記録を保存できませんでした。",
+    billingError: "支払い管理画面を開けませんでした。",
+    checkoutError: "決済画面を準備できませんでした。",
+    sessionEnded: "ログインの有効期限が切れました。もう一度ログインしてください。",
+    withdrawConfirm:
+      "PixelLifeを退会しますか？すべてのボード、記録、植物、バッジ、XPが完全に削除されます。",
+    withdrawFinal: "元に戻せません。それでも退会しますか？",
+    withdrawError: "退会を完了できませんでした。",
+    withdrawBlocked:
+      "先にPlusを解約してください。支払い済みの利用期間が終了した後に退会できます。",
+    badgeListLabel: "獲得したバッジを見る",
+    growthLabel: "成長記録",
+    badgeUnit: "個のバッジ",
   },
 };
 const screenWords: Record<Locale, Record<string, string>> = {
@@ -933,7 +1000,10 @@ function App() {
           const sources = guestActive.slice(0, freeSlots);
           if (
             confirm(
-              `Save ${sources.length} guest board${sources.length === 1 ? "" : "s"} to this account?`,
+              actionWords[locale].importGuest.replace(
+                "{count}",
+                String(sources.length),
+              ),
             )
           ) {
             for (const source of sources)
@@ -963,11 +1033,14 @@ function App() {
         }
         let loaded: Board[];
         if (Array.isArray(data.entries)) {
+          const entriesByBoard = new Map<number, typeof data.entries>();
+          data.entries.forEach((entry) => {
+            const entries = entriesByBoard.get(entry.boardId) || [];
+            entries.push(entry);
+            entriesByBoard.set(entry.boardId, entries);
+          });
           loaded = data.boards.map((b) =>
-            fromApiBoard(
-              b,
-              data.entries.filter((e) => e.boardId === b.id),
-            ),
+            fromApiBoard(b, entriesByBoard.get(b.id) || []),
           );
         } else {
           const details = await Promise.all(
@@ -983,7 +1056,16 @@ function App() {
           current === extraWords[locale].serverWaking ? "" : current,
         );
         setMember(account);
-        setRewards(data.rewards);
+        if (data.rewards) setRewards(data.rewards);
+        else
+          pixelLifeApi
+            .rewards()
+            .then((nextRewards) => {
+              if (alive) setRewards(nextRewards);
+            })
+            .catch((error) =>
+              console.error("PixelLife rewards load failed", error),
+            );
         setBoards(loaded);
         setSelected((v) =>
           loaded.some((b) => b.id === v) ? v : loaded[0]?.id || "",
@@ -1006,7 +1088,7 @@ function App() {
           }
         } else if (!(error instanceof ApiError && error.status === 401)) {
           console.error("PixelLife initial load failed", error);
-          setNotice("Could not load your account data.");
+          setNotice(actionWords[locale].accountLoadError);
         }
       }
     };
@@ -1053,40 +1135,14 @@ function App() {
       localStorage.setItem(GUEST_BOARD_KEY, JSON.stringify(boards));
   }, [boards, member]);
   useEffect(() => {
-    if (notice === "Could not load your account data.")
-      setNotice(actionWords[locale].accountLoadError);
-  }, [locale, notice]);
-  useEffect(() => {
     if (view === "rewards" && member && !rewards)
       pixelLifeApi
         .rewards()
         .then(setRewards)
-        .catch((error) => showError(error, "Could not load rewards"));
+        .catch((error) =>
+          showError(error, actionWords[locale].rewardsLoadError),
+        );
   }, [view, member, rewards]);
-  useEffect(() => {
-    if (!member) return;
-    const status = document.querySelector<HTMLElement>(".reward-status");
-    if (!status) return;
-    const openRewards = () => navigate("rewards", true);
-    const keyboard = (event: KeyboardEvent) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        openRewards();
-      }
-    };
-    status.tabIndex = 0;
-    status.setAttribute("role", "button");
-    status.setAttribute(
-      "aria-label",
-      locale === "ko" ? "내 배지 목록 보기" : "View my badges",
-    );
-    status.addEventListener("click", openRewards);
-    status.addEventListener("keydown", keyboard);
-    return () => {
-      status.removeEventListener("click", openRewards);
-      status.removeEventListener("keydown", keyboard);
-    };
-  }, [member, locale, view]);
   const [title, setTitle] = useState("");
   const [goal, setGoal] = useState<number | null>(5);
   const [customGoal, setCustomGoal] = useState(45);
@@ -1112,8 +1168,15 @@ function App() {
     boards.find((b) => b.id === selected) || boards[0] || emptyBoard;
   const showError = (error: unknown, fallback: string) => {
     if (error instanceof ApiError && error.status === 401) {
-      setNotice("Your session ended. Please sign in again.");
+      setNotice(actionWords[locale].sessionEnded);
       setMember(null);
+    } else if (
+      error instanceof ApiError &&
+      error.message.includes("Cancel Plus")
+    ) {
+      setNotice(actionWords[locale].withdrawBlocked);
+    } else if (error instanceof Error && locale !== "en") {
+      setNotice(fallback);
     } else setNotice(error instanceof Error ? error.message : fallback);
   };
   (t as any).resetToday = async () => {
@@ -1132,7 +1195,7 @@ function App() {
       setNote("");
       setSaved(false);
     } catch (error) {
-      showError(error, "Could not reset today");
+      showError(error, actionWords[locale].resetError);
     } finally {
       setBusy(false);
     }
@@ -1202,7 +1265,7 @@ function App() {
       setTitle("");
       navigate("detail", true);
     } catch (error) {
-      showError(error, "Could not make this board");
+      showError(error, actionWords[locale].createError);
     } finally {
       setBusy(false);
     }
@@ -1248,7 +1311,7 @@ function App() {
       setSaved(true);
       setTimeout(() => setSaved(false), 1300);
     } catch (error) {
-      showError(error, "Could not save today");
+      showError(error, actionWords[locale].saveError);
     } finally {
       setBusy(false);
     }
@@ -1307,7 +1370,7 @@ function App() {
       const checkout = await pixelLifeApi.createPlusCheckout();
       location.href = checkout.url;
     } catch (error) {
-      showError(error, "Checkout is not ready yet");
+      showError(error, actionWords[locale].checkoutError);
       setBusy(false);
     }
   };
@@ -1343,29 +1406,25 @@ function App() {
               {view === "guide" ? t.home : t.guide}
             </button>
           </nav>
-          <label className="language">
-            <span>◎</span>
-            <select
-              aria-label={t.language}
-              value={locale}
-              onChange={(e) => setLocale(e.target.value as Locale)}
-            >
-              <option value="en">🇺🇸 English</option>
-              <option value="ko">🇰🇷 한국어</option>
-              <option value="zh">🇨🇳 中文</option>
-              <option value="ja">🇯🇵 日本語</option>
-            </select>
-          </label>
           {member ? (
             <>
-              <div className="reward-status">
-                <strong>{rewards?.gradeCode || "SEED"}</strong>
+              <button
+                className="reward-status"
+                aria-label={actionWords[locale].badgeListLabel}
+                onClick={() => navigate("rewards", true)}
+              >
                 <span>
-                  {rewards?.totalXp || 0} XP ·{" "}
-                  {rewards?.badges.filter((b) => Boolean(b.earned)).length || 0}{" "}
-                  ✓
+                  <small>{actionWords[locale].growthLabel}</small>
+                  <strong>
+                    {rewards?.gradeCode || "SEED"} · {rewards?.totalXp || 0} XP
+                  </strong>
                 </span>
-              </div>
+                <em>
+                  {rewards?.badges.filter((b) => Boolean(b.earned)).length || 0}{" "}
+                  {actionWords[locale].badgeUnit}
+                </em>
+                <i aria-hidden="true">›</i>
+              </button>
               <b>{member.effectivePlan}</b>
               <button
                 className="account-link"
@@ -1379,6 +1438,19 @@ function App() {
               {t.signIn}
             </a>
           )}
+          <label className="language">
+            <span>◎</span>
+            <select
+              aria-label={t.language}
+              value={locale}
+              onChange={(e) => setLocale(e.target.value as Locale)}
+            >
+              <option value="en">🇺🇸 English</option>
+              <option value="ko">🇰🇷 한국어</option>
+              <option value="zh">🇨🇳 中文</option>
+              <option value="ja">🇯🇵 日本語</option>
+            </select>
+          </label>
         </div>
       </header>
       {notice && (
@@ -1592,26 +1664,22 @@ function App() {
             try {
               location.href = (await pixelLifeApi.createCustomerPortal()).url;
             } catch (error) {
-              showError(error, "Could not open billing");
+              showError(error, actionWords[locale].billingError);
             } finally {
               setBusy(false);
             }
           }}
           onDelete={async () => {
-            if (
-              !confirm(
-                "Delete your account and every board, plant, badge, and record? This cannot be undone.",
-              )
-            )
+            if (!confirm(actionWords[locale].withdrawConfirm))
               return;
-            if (!confirm("Are you sure? This is the final check.")) return;
+            if (!confirm(actionWords[locale].withdrawFinal)) return;
             setBusy(true);
             try {
               await pixelLifeApi.deleteAccount();
               localStorage.removeItem(GUEST_BOARD_KEY);
               location.href = authLinks.logout;
             } catch (error) {
-              showError(error, "Could not delete account");
+              showError(error, actionWords[locale].withdrawError);
               setBusy(false);
             }
           }}
@@ -1631,8 +1699,22 @@ function App() {
         <main className="guide-page">
           <section className="guide-hero">
             <p className="eyebrow">ADMIN TEST</p>
-            <h1>Sign in first.</h1>
-            <p>Only accounts listed in TEST_USER_EMAILS can open this page.</p>
+            <h1>
+              {{
+                en: "Sign in first.",
+                ko: "먼저 로그인해 주세요.",
+                zh: "请先登录。",
+                ja: "先にログインしてください。",
+              }[locale]}
+            </h1>
+            <p>
+              {{
+                en: "Only test administrator accounts can open this page.",
+                ko: "테스트 관리자 계정만 이 화면을 열 수 있어요.",
+                zh: "只有测试管理员账户可以打开此页面。",
+                ja: "テスト管理者アカウントのみこの画面を開けます。",
+              }[locale]}
+            </p>
             <a className="login-button" href={authLinks.google}>
               {t.signIn}
             </a>
@@ -1827,10 +1909,10 @@ function AccountPage({
       active: "active boards",
       billing: "Manage billing",
       logout: "Log out",
-      delete: "Delete account",
+      delete: "Leave PixelLife",
       deleteHelp:
-        "All boards, records, plants, badges, and XP will be permanently removed. Active Plus must be canceled and expired first.",
-      deleteMe: "Delete my account",
+        "All boards, records, plants, badges, and XP will be permanently removed. If you cancel Plus, you can leave after the already-paid period ends.",
+      deleteMe: "Leave PixelLife",
     },
     ko: {
       home: "← 홈",
@@ -1839,10 +1921,10 @@ function AccountPage({
       active: "개 활성 보드",
       billing: "결제 관리",
       logout: "로그아웃",
-      delete: "계정 삭제",
+      delete: "회원 탈퇴",
       deleteHelp:
-        "모든 보드, 기록, 식물, 배지와 XP가 영구 삭제돼요. 활성 Plus를 먼저 해지하고 이용 기간이 끝나야 해요.",
-      deleteMe: "내 계정 삭제",
+        "모든 보드, 기록, 식물, 배지와 XP가 영구 삭제돼요. Plus를 해지해도 이미 결제한 이용 기간이 끝난 뒤 탈퇴할 수 있어요.",
+      deleteMe: "회원 탈퇴하기",
     },
     zh: {
       home: "← 首页",
@@ -1851,10 +1933,10 @@ function AccountPage({
       active: "个活动面板",
       billing: "管理付款",
       logout: "退出登录",
-      delete: "删除账户",
+      delete: "退出会员",
       deleteHelp:
-        "所有面板、记录、植物、徽章和XP将永久删除。必须先取消Plus并等待付费期结束。",
-      deleteMe: "删除我的账户",
+        "所有面板、记录、植物、徽章和XP将永久删除。取消Plus后，需等待已付费使用期结束才能退出会员。",
+      deleteMe: "退出会员",
     },
     ja: {
       home: "← ホーム",
@@ -1863,10 +1945,10 @@ function AccountPage({
       active: "個の進行中ボード",
       billing: "支払いを管理",
       logout: "ログアウト",
-      delete: "アカウントを削除",
+      delete: "退会",
       deleteHelp:
-        "すべてのボード、記録、植物、バッジ、XPが完全に削除されます。Plusを解約し、利用期間が終了している必要があります。",
-      deleteMe: "アカウントを削除",
+        "すべてのボード、記録、植物、バッジ、XPが完全に削除されます。Plusを解約しても、支払い済みの利用期間が終了した後に退会できます。",
+      deleteMe: "退会する",
     },
   }[locale];
   return (
@@ -1912,6 +1994,13 @@ function LegalPagePlan({
       home: "← Home",
       privacy: "Privacy",
       terms: "Terms",
+      draft: "Draft · 2026-08-21",
+      privacyText: [
+        "PixelLife stores membership, board, record, reward, and subscription data needed to provide the service.",
+        "Polar handles payment details. PixelLife does not store full card numbers.",
+      ],
+      termsText:
+        "PixelLife is a personal tracking tool, not medical, financial, or professional advice.",
       policy:
         "Free and Guest allow up to 3 active boards. Plus allows up to 10. Signed-in members can keep earning rewards without a total limit. After Plus ends, existing active boards remain usable; new creation waits until fewer than 3 remain.",
     },
@@ -1919,6 +2008,13 @@ function LegalPagePlan({
       home: "← 홈",
       privacy: "개인정보",
       terms: "이용약관",
+      draft: "초안 · 2026년 8월 21일",
+      privacyText: [
+        "PixelLife는 서비스 제공에 필요한 회원, 보드, 기록, 보상과 구독 정보를 저장해요.",
+        "결제 정보는 Polar가 처리하며 PixelLife는 전체 카드 번호를 저장하지 않아요.",
+      ],
+      termsText:
+        "PixelLife는 개인 기록 도구이며 의료·금융·전문적인 조언을 제공하지 않아요.",
       policy:
         "비회원과 무료는 활성 보드 최대 3개, Plus는 최대 10개예요. 로그인 회원은 완료 보상과 등급·배지를 제한 없이 누적해요. Plus 종료 후 기존 활성 보드는 모두 이용하며, 활성 보드가 3개 미만이 될 때까지 새 보드 생성만 제한해요.",
     },
@@ -1926,6 +2022,12 @@ function LegalPagePlan({
       home: "← 首页",
       privacy: "隐私",
       terms: "条款",
+      draft: "草案 · 2026年8月21日",
+      privacyText: [
+        "PixelLife会保存提供服务所需的会员、面板、记录、奖励和订阅信息。",
+        "付款信息由Polar处理，PixelLife不保存完整卡号。",
+      ],
+      termsText: "PixelLife是个人记录工具，不构成医疗、金融或专业建议。",
       policy:
         "访客和免费最多3个活动面板，Plus最多10个。登录会员可无限累积奖励。Plus结束后现有面板仍可使用，少于3个前仅限制新建。",
     },
@@ -1933,6 +2035,13 @@ function LegalPagePlan({
       home: "← ホーム",
       privacy: "プライバシー",
       terms: "利用規約",
+      draft: "草案 · 2026年8月21日",
+      privacyText: [
+        "PixelLifeはサービス提供に必要な会員、ボード、記録、報酬、購読情報を保存します。",
+        "支払い情報はPolarが処理し、PixelLifeは完全なカード番号を保存しません。",
+      ],
+      termsText:
+        "PixelLifeは個人記録ツールであり、医療・金融・専門的な助言ではありません。",
       policy:
         "ゲストと無料は進行中最大3個、Plusは最大10個です。ログイン会員の報酬累積に上限はありません。Plus終了後も既存ボードは使え、3個未満になるまで新規作成だけ制限します。",
     },
@@ -1940,14 +2049,8 @@ function LegalPagePlan({
   const title = base[kind];
   const paragraphs =
     kind === "privacy"
-      ? [
-          "PixelLife stores account, board, record, reward, and subscription data needed to provide the service.",
-          "Polar handles payment details. PixelLife does not store full card numbers.",
-        ]
-      : [
-          "PixelLife is a personal tracking tool, not medical, financial, or professional advice.",
-          base.policy,
-        ];
+      ? base.privacyText
+      : [base.termsText, base.policy];
   return (
     <main className="guide-page legal-page">
       <button className="back" onClick={onBack}>
@@ -1956,7 +2059,7 @@ function LegalPagePlan({
       <article>
         <p className="eyebrow">PIXELLIFE</p>
         <h1>{title}</h1>
-        <p className="legal-date">Draft · 2026-08-21</p>
+        <p className="legal-date">{base.draft}</p>
         {paragraphs.map((p) => (
           <p key={p}>{p}</p>
         ))}

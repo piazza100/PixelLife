@@ -2538,19 +2538,48 @@ body[data-board-type="mood"] .calendar-key {
 .reward-status {
   display: flex !important;
   width: auto !important;
-  height: 34px !important;
+  min-width: 205px;
+  height: auto !important;
+  min-height: 42px;
   align-items: center;
-  gap: 7px;
-  padding: 0 10px !important;
-  border-radius: 9px !important;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 6px 9px 6px 11px !important;
+  border: 1px solid #cfe7d6 !important;
+  border-radius: 11px !important;
   background: #eef7f0 !important;
   color: #22653d !important;
+  text-align: left;
+}
+.reward-status > span {
+  display: grid !important;
+  min-width: 0;
+  gap: 2px;
+}
+.reward-status small {
+  color: #62806b;
+  font-size: 7px;
+  font-weight: 800;
+  line-height: 1;
 }
 .reward-status strong {
-  font-size: 8px;
+  overflow: hidden;
+  color: #155b34;
+  font: 700 8px "DM Mono";
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.reward-status span {
-  font: 500 7px "DM Mono";
+.reward-status em {
+  margin-left: auto;
+  color: #477057;
+  font: normal 500 7px "DM Mono";
+  white-space: nowrap;
+}
+.reward-status i {
+  color: #159651;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1;
 }
 .guide-samples {
   width: min(980px, calc(100% - 36px));
@@ -2716,7 +2745,7 @@ body[data-board-type="mood"] .calendar-key {
     min-height: 175px;
   }
   .reward-status span {
-    display: none;
+    display: grid;
   }
   .guide-samples {
     width: min(100% - 24px, 980px);
@@ -3386,8 +3415,7 @@ body[data-board-type="check"] .calendar-grid button.done.level-0:before {
   letter-spacing: 0.4px;
 }
 .reward-status span {
-  display: inline !important;
-  white-space: nowrap;
+  white-space: normal;
 }
 .brand-mark {
   display: block;
@@ -3406,6 +3434,48 @@ body[data-board-type="check"] .calendar-grid button.done.level-0:before {
 .reward-status:focus-visible {
   outline: 3px solid #a8dfbb;
   outline-offset: 2px;
+}
+@media (max-width: 760px) {
+  header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+  .brand {
+    margin-top: 4px;
+  }
+  .plan {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: min(100%, 330px);
+    margin-left: auto;
+    align-items: center;
+    justify-content: stretch;
+  }
+  .plan > .account-link,
+  .plan > .login-button {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: end;
+  }
+  .plan > .language {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+  .plan > .reward-status {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100% !important;
+    min-width: 0;
+    margin-top: 2px;
+  }
+  .plan > b {
+    display: none;
+  }
+  .language select {
+    min-width: 88px;
+  }
 }
 .badge-grid article.locked {
   display: none;
