@@ -345,10 +345,10 @@ const extraWords: Record<Locale, Record<string, string>> = {
     recentPrefix: "You recorded",
     recentSuffix: "times in the last 4 weeks.",
     levelsChart: "Your 1–5 levels",
-    checkChart: "Done and missed days",
+    checkChart: "Your Yes / No answers",
     moodChart: "Your saved moods",
     levelsHelp: "How often you picked each color.",
-    checkChartHelp: "A simple view of your check-ins.",
+    checkChartHelp: "How often you chose Yes or No.",
     moodChartHelp: "The moods you chose on recorded days.",
     notRecorded: "not recorded",
     privacy: "Privacy",
@@ -403,10 +403,10 @@ const extraWords: Record<Locale, Record<string, string>> = {
     recentPrefix: "최근 4주 동안",
     recentSuffix: "번 기록했어요.",
     levelsChart: "1~5 단계 분포",
-    checkChart: "완료일과 미기록일",
+    checkChart: "예 / 아니요 선택",
     moodChart: "저장한 기분",
     levelsHelp: "각 색을 몇 번 골랐는지 보여줘요.",
-    checkChartHelp: "체크한 날을 간단히 보여줘요.",
+    checkChartHelp: "예와 아니요를 각각 몇 번 골랐는지 보여줘요.",
     moodChartHelp: "기록한 날의 기분을 보여줘요.",
     notRecorded: "미기록",
     privacy: "개인정보",
@@ -459,10 +459,10 @@ const extraWords: Record<Locale, Record<string, string>> = {
     recentPrefix: "最近4周记录了",
     recentSuffix: "次。",
     levelsChart: "你的1–5等级",
-    checkChart: "完成和未记录天数",
+    checkChart: "是 / 否选择",
     moodChart: "保存的心情",
     levelsHelp: "查看每种颜色选择次数。",
-    checkChartHelp: "简单查看你的打卡。",
+    checkChartHelp: "查看选择是与否的次数。",
     moodChartHelp: "查看记录日选择的心情。",
     notRecorded: "未记录",
     privacy: "隐私",
@@ -516,10 +516,10 @@ const extraWords: Record<Locale, Record<string, string>> = {
     recentPrefix: "直近4週間で",
     recentSuffix: "回記録しました。",
     levelsChart: "1〜5レベル",
-    checkChart: "完了日と未記録日",
+    checkChart: "はい / いいえの選択",
     moodChart: "保存した気分",
     levelsHelp: "各色を選んだ回数です。",
-    checkChartHelp: "チェックインを簡単に表示します。",
+    checkChartHelp: "はいといいえを選んだ回数を表示します。",
     moodChartHelp: "記録日に選んだ気分です。",
     notRecorded: "未記録",
     privacy: "プライバシー",
@@ -3589,21 +3589,26 @@ function Stats({
   const board = t.board as Board;
   const total = board.goalDays || days;
   const elapsed = Math.min(days, total);
-  const missed = Math.max(0, elapsed - wins);
   const rate = Math.round((wins / Math.max(1, elapsed)) * 100);
   const levelCounts = [1, 2, 3, 4, 5].map(
     (n) => board.entries.filter((e) => e.value === n).length,
   );
+  const yesCount = board.entries.filter((e) => e.value > 0).length;
+  const noCount = board.entries.filter((e) => e.value === 0).length;
+  const checkTotal = yesCount + noCount;
+  const yesRate = Math.round((yesCount / Math.max(1, checkTotal)) * 100);
   const moods = ["😄", "😊", "😐", "😔", "😴"];
   const label = {
-    en: { period: "Goal days", elapsed: "Day now", recorded: "Days recorded" },
-    ko: { period: "전체 목표", elapsed: "현재 일차", recorded: "기록한 날" },
-    zh: { period: "目标天数", elapsed: "当前天数", recorded: "记录天数" },
-    ja: { period: "目標日数", elapsed: "現在の日数", recorded: "記録日" },
+    en: { period: "Goal days", elapsed: "Day now", recorded: "Days recorded", yes: "Yes", no: "No" },
+    ko: { period: "전체 목표", elapsed: "현재 일차", recorded: "기록한 날", yes: "예", no: "아니요" },
+    zh: { period: "目标天数", elapsed: "当前天数", recorded: "记录天数", yes: "是", no: "否" },
+    ja: { period: "目標日数", elapsed: "現在の日数", recorded: "記録日", yes: "はい", no: "いいえ" },
   }[t.locale || "en"] || {
     period: "Goal days",
     elapsed: "Day now",
     recorded: "Days recorded",
+    yes: "Yes",
+    no: "No",
   };
   return (
     <section className="stats-page friendly">
@@ -3676,9 +3681,9 @@ function Stats({
         )}
         {board.inputType === "check" && (
           <div className="check-distribution">
-            <div style={{ "--part": `${rate}%` } as React.CSSProperties} />
+            <div style={{ "--part": `${yesRate}%` } as React.CSSProperties} />
             <p>
-              <b>{wins}</b> {t.done} <span>·</span> {missed} {t.notRecorded}
+              <b>{yesCount}</b> {label.yes} <span>·</span> <b>{noCount}</b> {label.no}
             </p>
           </div>
         )}
