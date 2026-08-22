@@ -2,6 +2,7 @@ package com.pixellife.api;
 
 import com.pixellife.domain.BoardRow;
 import com.pixellife.service.PixelLifeService;
+import com.pixellife.service.BillingService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.http.HttpStatus;
@@ -18,7 +19,8 @@ import java.util.Map;
 @RequestMapping("/api")
 public class PixelLifeController {
     private final PixelLifeService service;
-    public PixelLifeController(PixelLifeService service) { this.service = service; }
+    private final BillingService billing;
+    public PixelLifeController(PixelLifeService service, BillingService billing) { this.service = service; this.billing = billing; }
 
     @GetMapping("/bootstrap")
     public Map<String, Object> bootstrap(@AuthenticationPrincipal OidcUser user, @RequestParam(defaultValue="en") String locale) {
@@ -51,12 +53,17 @@ public class PixelLifeController {
     public Map<String,Object> board(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId) { return service.board(service.memberId(user.getSubject()), boardId); }
 
     @PutMapping("/boards/{boardId}/entries/{date}") @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void saveEntry(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId, @PathVariable LocalDate date, @Valid @RequestBody SaveEntry request) {
-        service.saveEntry(service.memberId(user.getSubject()), boardId, date, request.value(), request.success(), request.emoji(), request.note());
+    public void saveEntry(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId, @PathVariable LocalDate date,
+                          @RequestHeader(value="X-Time-Zone", defaultValue="UTC") String timeZone,
+                          @Valid @RequestBody SaveEntry request) {
+        service.saveTodayEntry(service.memberId(user.getSubject()), boardId, date, timeZone, request.value(), request.success(), request.emoji(), request.note());
     }
 
     @DeleteMapping("/boards/{boardId}/entries/{date}") @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void resetEntry(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId, @PathVariable LocalDate date) { service.deleteEntry(service.memberId(user.getSubject()), boardId, date); }
+    public void resetEntry(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId, @PathVariable LocalDate date,
+                           @RequestHeader(value="X-Time-Zone", defaultValue="UTC") String timeZone) {
+        service.deleteTodayEntry(service.memberId(user.getSubject()), boardId, date, timeZone);
+    }
 
     @DeleteMapping("/boards/{boardId}") @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteBoard(@AuthenticationPrincipal OidcUser user, @PathVariable long boardId) { service.deleteBoard(service.memberId(user.getSubject()), boardId); }
@@ -71,7 +78,11 @@ public class PixelLifeController {
     public Map<String,Object> rewards(@AuthenticationPrincipal OidcUser user) { return service.rewards(service.memberId(user.getSubject())); }
 
     @DeleteMapping("/me") @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteAccount(@AuthenticationPrincipal OidcUser user) { service.deleteAccount(service.memberId(user.getSubject())); }
+    public void deleteAccount(@AuthenticationPrincipal OidcUser user) {
+        long userId = service.memberId(user.getSubject());
+        billing.requireCanceledSubscriptionForAccountDeletion(userId);
+        service.deleteAccount(userId);
+    }
 
     private long memberId(OidcUser user, String locale) {
         return service.resolveOrCreateMember(user.getSubject(), user.getEmail(), locale);

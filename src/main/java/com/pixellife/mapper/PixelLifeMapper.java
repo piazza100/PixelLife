@@ -26,14 +26,18 @@ public interface PixelLifeMapper {
     @Update("UPDATE users SET email=#{email},display_name=#{displayName},avatar_url=#{avatarUrl},locale=#{locale} WHERE id=#{id}")
     void updateMember(Map<String, Object> member);
 
-    @Select("SELECT id,email,display_name AS displayName,avatar_url AS avatarUrl,plan,paid_until AS paidUntil,total_xp AS totalXp,grade_code AS gradeCode FROM users WHERE id=#{userId}")
+    @Select("SELECT id,email,display_name AS displayName,avatar_url AS avatarUrl,plan,paid_from AS paidFrom,paid_until AS paidUntil,subscription_cancel_at_period_end AS cancelAtPeriodEnd,total_xp AS totalXp,grade_code AS gradeCode FROM users WHERE id=#{userId}")
     Map<String,Object> findMember(Long userId);
 
     @Select("SELECT polar_customer_id FROM users WHERE id=#{userId}")
     String findPolarCustomerId(Long userId);
 
+    @Select("SELECT polar_customer_id AS customerId,polar_subscription_id AS subscriptionId FROM users WHERE id=#{userId}")
+    Map<String,Object> findBillingIdentity(Long userId);
+
     @Select("""
-        SELECT u.id AS memberId,u.email,u.plan,u.paid_until AS paidUntil,u.total_xp AS totalXp,u.grade_code AS gradeCode,
+        SELECT u.id AS memberId,u.email,u.plan,u.paid_from AS paidFrom,u.paid_until AS paidUntil,
+               u.subscription_cancel_at_period_end AS cancelAtPeriodEnd,u.total_xp AS totalXp,u.grade_code AS gradeCode,
                b.id AS boardId,b.name AS boardName,b.board_type AS boardType,b.color,b.reward_species_code AS rewardSpeciesCode,
                b.reward_color_code AS rewardColorCode,s.name AS rewardSpeciesName,s.unicode_symbol AS rewardSpeciesSymbol,
                b.start_date AS startDate,b.goal_days AS goalDays,b.status,b.ended_at AS endedAt,b.completed_at AS completedAt,
@@ -58,10 +62,10 @@ public interface PixelLifeMapper {
     @Update("UPDATE billing_webhook_events SET processed_at=CURRENT_TIMESTAMP(6) WHERE webhook_id=#{webhookId}")
     void markBillingWebhookProcessed(String webhookId);
 
-    @Update("UPDATE users SET plan='PLUS',paid_until=#{paidUntil},polar_customer_id=COALESCE(#{customerId},polar_customer_id),polar_subscription_id=#{subscriptionId},billing_updated_at=#{eventTimestamp} WHERE id=#{userId} AND (billing_updated_at IS NULL OR billing_updated_at<=#{eventTimestamp})")
-    int activatePolarSubscription(Long userId, String customerId, String subscriptionId, LocalDateTime paidUntil, LocalDateTime eventTimestamp);
+    @Update("UPDATE users SET plan='PLUS',paid_from=#{paidFrom},paid_until=#{paidUntil},subscription_cancel_at_period_end=#{cancelAtPeriodEnd},polar_customer_id=COALESCE(#{customerId},polar_customer_id),polar_subscription_id=#{subscriptionId},billing_updated_at=#{eventTimestamp} WHERE id=#{userId} AND (billing_updated_at IS NULL OR billing_updated_at<=#{eventTimestamp})")
+    int activatePolarSubscription(Long userId, String customerId, String subscriptionId, LocalDateTime paidFrom, LocalDateTime paidUntil, boolean cancelAtPeriodEnd, LocalDateTime eventTimestamp);
 
-    @Update("UPDATE users SET plan='FREE',paid_until=NULL,polar_customer_id=COALESCE(#{customerId},polar_customer_id),polar_subscription_id=COALESCE(#{subscriptionId},polar_subscription_id),billing_updated_at=#{eventTimestamp} WHERE id=#{userId} AND (billing_updated_at IS NULL OR billing_updated_at<=#{eventTimestamp})")
+    @Update("UPDATE users SET plan='FREE',paid_until=#{eventTimestamp},subscription_cancel_at_period_end=FALSE,polar_customer_id=COALESCE(#{customerId},polar_customer_id),polar_subscription_id=COALESCE(#{subscriptionId},polar_subscription_id),billing_updated_at=#{eventTimestamp} WHERE id=#{userId} AND (billing_updated_at IS NULL OR billing_updated_at<=#{eventTimestamp})")
     int revokePolarSubscription(Long userId, String customerId, String subscriptionId, LocalDateTime eventTimestamp);
 
     @Select("SELECT COUNT(*) FROM boards WHERE user_id=#{userId} AND status='ACTIVE'")

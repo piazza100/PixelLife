@@ -86,6 +86,22 @@ public class BillingService {
         return String.valueOf(url);
     }
 
+    public void requireCanceledSubscriptionForAccountDeletion(long userId) {
+        Map<String,Object> identity = mapper.findBillingIdentity(userId);
+        String subscriptionId = identity == null ? "" : text(identity.get("subscriptionId"));
+        if (subscriptionId.isBlank()) return;
+        Map<String,Object> subscription = restClient.get()
+            .uri("/subscriptions/{id}", subscriptionId)
+            .header("Authorization", "Bearer " + accessToken)
+            .retrieve()
+            .body(Map.class);
+        String status = subscription == null ? "" : text(subscription.get("status"));
+        boolean cancelAtPeriodEnd = subscription != null && Boolean.TRUE.equals(subscription.get("cancel_at_period_end"));
+        if (!(cancelAtPeriodEnd || "canceled".equals(status) || "unpaid".equals(status) || "incomplete_expired".equals(status))) {
+            throw new IllegalStateException("Cancel Plus before deleting your account");
+        }
+    }
+
     @Transactional
     public void handleWebhook(byte[] payload, String webhookId, String timestamp, String signature) {
         verifySignature(payload, webhookId, timestamp, signature, Instant.now());
@@ -133,9 +149,11 @@ public class BillingService {
         if ("subscription.revoked".equals(eventType) || "canceled".equals(status) || "unpaid".equals(status)) {
             mapper.revokePolarSubscription(userId, customerId, subscriptionId, eventTime);
         } else if ("active".equals(status) || "trialing".equals(status) || "past_due".equals(status)) {
+            LocalDateTime paidFrom = firstDate(data.get("current_period_start"), data.get("started_at"));
             LocalDateTime paidUntil = firstDate(data.get("current_period_end"), data.get("ends_at"), data.get("trial_end"));
             if (paidUntil == null) throw new IllegalArgumentException("Polar subscription has no period end");
-            mapper.activatePolarSubscription(userId, customerId, subscriptionId, paidUntil, eventTime);
+            boolean cancelAtPeriodEnd = Boolean.TRUE.equals(data.get("cancel_at_period_end"));
+            mapper.activatePolarSubscription(userId, customerId, subscriptionId, paidFrom, paidUntil, cancelAtPeriodEnd, eventTime);
         }
     }
 

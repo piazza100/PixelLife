@@ -597,13 +597,13 @@ const actionWords: Record<Locale, Record<string, string>> = {
     sessionEnded: "Your session ended. Please sign in again.",
     withdrawConfirm:
       "Leave PixelLife? Every board, record, plant, badge, and XP will be permanently removed.",
-    withdrawFinal: "This cannot be undone. Do you still want to leave?",
+    withdrawFinal: "Your canceled subscription stays scheduled in Polar, but PixelLife access and data end now without an automatic refund. Do you still want to leave?",
     withdrawError: "Could not complete membership withdrawal.",
-    withdrawBlocked:
-      "Cancel Plus first. You can leave after the already-paid period ends.",
+    withdrawBlocked: "Cancel Plus in billing first. After cancellation is scheduled, you can leave whenever you want.",
     badgeListLabel: "View my badges",
     growthLabel: "My growth",
     badgeUnit: "badges",
+    supportLabel: "Email support",
   },
   ko: {
     completeBoard: "보드 완료",
@@ -624,13 +624,13 @@ const actionWords: Record<Locale, Record<string, string>> = {
     sessionEnded: "로그인이 만료됐어요. 다시 로그인해 주세요.",
     withdrawConfirm:
       "PixelLife에서 탈퇴할까요? 모든 보드, 기록, 식물, 배지와 XP가 영구 삭제돼요.",
-    withdrawFinal: "되돌릴 수 없어요. 그래도 회원 탈퇴할까요?",
+    withdrawFinal: "Polar 구독 해지 예약은 그대로 유지되지만 PixelLife 이용과 데이터는 지금 종료되며 자동 환불되지 않아요. 그래도 탈퇴할까요?",
     withdrawError: "회원 탈퇴를 완료하지 못했어요.",
-    withdrawBlocked:
-      "Plus를 먼저 해지해 주세요. 이미 결제한 이용 기간이 끝난 뒤 탈퇴할 수 있어요.",
+    withdrawBlocked: "결제 관리에서 Plus를 먼저 해지해 주세요. 해지 예약 후에는 원하는 때 바로 탈퇴할 수 있어요.",
     badgeListLabel: "내 배지 목록 보기",
     growthLabel: "나의 성장",
     badgeUnit: "배지",
+    supportLabel: "이메일 문의",
   },
   zh: {
     completeBoard: "完成面板",
@@ -650,12 +650,13 @@ const actionWords: Record<Locale, Record<string, string>> = {
     sessionEnded: "登录已过期，请重新登录。",
     withdrawConfirm:
       "要退出PixelLife会员吗？所有面板、记录、植物、徽章和XP都将永久删除。",
-    withdrawFinal: "此操作无法撤销，仍要退出会员吗？",
+    withdrawFinal: "Polar中的订阅取消预约会保留，但PixelLife使用权限和数据会立即结束且不会自动退款。仍要退出吗？",
     withdrawError: "无法完成会员注销。",
-    withdrawBlocked: "请先取消Plus。已付费使用期结束后即可退出会员。",
+    withdrawBlocked: "请先在付款管理中取消Plus。预约取消后可随时退出会员。",
     badgeListLabel: "查看我的徽章",
     growthLabel: "我的成长",
     badgeUnit: "枚徽章",
+    supportLabel: "邮件咨询",
   },
   ja: {
     completeBoard: "ボードを完了",
@@ -676,13 +677,13 @@ const actionWords: Record<Locale, Record<string, string>> = {
     sessionEnded: "ログインの有効期限が切れました。もう一度ログインしてください。",
     withdrawConfirm:
       "PixelLifeを退会しますか？すべてのボード、記録、植物、バッジ、XPが完全に削除されます。",
-    withdrawFinal: "元に戻せません。それでも退会しますか？",
+    withdrawFinal: "Polarの解約予約は維持されますが、PixelLifeの利用とデータは直ちに終了し、自動返金はありません。それでも退会しますか？",
     withdrawError: "退会を完了できませんでした。",
-    withdrawBlocked:
-      "先にPlusを解約してください。支払い済みの利用期間が終了した後に退会できます。",
+    withdrawBlocked: "先に支払い管理でPlusを解約してください。解約予約後はいつでも退会できます。",
     badgeListLabel: "獲得したバッジを見る",
     growthLabel: "成長記録",
     badgeUnit: "個のバッジ",
+    supportLabel: "メール問い合わせ",
   },
 };
 const boardLimitWords: Record<Locale, (plan: string, limit: number) => string> = {
@@ -1978,6 +1979,7 @@ function App() {
         <b>PixelLife</b>
         <span>Small days. Big life.</span>
         <nav>
+          <a href="mailto:meet.wonderlife@gmail.com">{actionWords[locale].supportLabel}</a>
           <button onClick={() => navigate("privacy", true)}>{t.privacy}</button>
           <button onClick={() => navigate("terms", true)}>{t.terms}</button>
         </nav>
@@ -2008,12 +2010,14 @@ function AccountPage({
       account: "ACCOUNT",
       plan: "Current plan",
       active: "active boards",
+      period: "Subscription period",
+      canceling: "Ends after this paid period",
+      support: "Email support",
       billing: "Manage billing",
       upgrade: "Start Plus",
       logout: "Log out",
       delete: "Leave PixelLife",
-      deleteHelp:
-        "All boards, records, plants, badges, and XP will be permanently removed. If you cancel Plus, you can leave after the already-paid period ends.",
+      deleteHelp: "Cancel Plus in billing first. After cancellation is scheduled, you can leave any time. Leaving deletes PixelLife data and access now; Polar keeps billing history for support.",
       deleteMe: "Leave PixelLife",
     },
     ko: {
@@ -2021,12 +2025,14 @@ function AccountPage({
       account: "계정",
       plan: "현재 요금제",
       active: "개 활성 보드",
+      period: "구독 이용 기간",
+      canceling: "현재 결제 기간 후 종료 예정",
+      support: "이메일 문의",
       billing: "결제 관리",
       upgrade: "Plus 시작",
       logout: "로그아웃",
       delete: "회원 탈퇴",
-      deleteHelp:
-        "모든 보드, 기록, 식물, 배지와 XP가 영구 삭제돼요. Plus를 해지해도 이미 결제한 이용 기간이 끝난 뒤 탈퇴할 수 있어요.",
+      deleteHelp: "먼저 결제 관리에서 Plus를 해지해 주세요. 해지 예약 후에는 언제든 탈퇴할 수 있어요. 탈퇴하면 PixelLife 데이터와 이용은 즉시 끝나며 결제 이력은 문의를 위해 Polar에 남아요.",
       deleteMe: "회원 탈퇴하기",
     },
     zh: {
@@ -2034,12 +2040,15 @@ function AccountPage({
       account: "账户",
       plan: "当前方案",
       active: "个活动面板",
+      period: "订阅期间",
+      canceling: "将在当前付费期结束后停止",
+      support: "邮件咨询",
       billing: "管理付款",
       upgrade: "开通Plus",
       logout: "退出登录",
       delete: "退出会员",
       deleteHelp:
-        "所有面板、记录、植物、徽章和XP将永久删除。取消Plus后，需等待已付费使用期结束才能退出会员。",
+        "请先在付款管理中取消Plus。预约取消后可随时退出。退出会立即删除PixelLife数据和使用权限，Polar会保留付款记录用于客服。",
       deleteMe: "退出会员",
     },
     ja: {
@@ -2047,15 +2056,20 @@ function AccountPage({
       account: "アカウント",
       plan: "現在のプラン",
       active: "個の進行中ボード",
+      period: "購読期間",
+      canceling: "現在の支払期間後に終了予定",
+      support: "メールで問い合わせ",
       billing: "支払いを管理",
       upgrade: "Plusを始める",
       logout: "ログアウト",
       delete: "退会",
       deleteHelp:
-        "すべてのボード、記録、植物、バッジ、XPが完全に削除されます。Plusを解約しても、支払い済みの利用期間が終了した後に退会できます。",
+        "先に支払い管理でPlusを解約してください。解約予約後はいつでも退会できます。退会するとPixelLifeデータと利用は直ちに終了し、支払い履歴はサポートのためPolarに残ります。",
       deleteMe: "退会する",
     },
   }[locale];
+  const paidFrom = member.paidFrom?.slice(0, 10);
+  const paidUntil = member.paidUntil?.slice(0, 10);
   return (
     <main className="guide-page account-page">
       <button className="back" onClick={onBack}>
@@ -2066,19 +2080,23 @@ function AccountPage({
         <h1>{c.account}</h1>
         <p>{member.email}</p>
         <div className="account-plan">
-          <span>{c.plan}</span>
-          <b>{member.effectivePlan}</b>
-          <small>
-            {member.activeBoardLimit} {c.active}
-          </small>
+          <div>
+            <span>{c.plan}</span>
+            <b>{member.effectivePlan}</b>
+          </div>
+          <strong>{member.activeBoardLimit} {c.active}</strong>
+          {(paidFrom || paidUntil) && <p>
+            {c.period} · {paidFrom || "—"} ~ {paidUntil || "—"}
+            {Boolean(member.cancelAtPeriodEnd) && <small>{c.canceling}</small>}
+          </p>}
         </div>
-        <button
-          className="primary"
-          onClick={member.effectivePlan === "PLUS" ? onPortal : onUpgrade}
-        >
-          {member.effectivePlan === "PLUS" ? c.billing : c.upgrade}
-        </button>
-        <a href={authLinks.logout}>{c.logout}</a>
+        <div className="account-actions">
+          <button className="primary" onClick={member.effectivePlan === "PLUS" ? onPortal : onUpgrade}>
+            {member.effectivePlan === "PLUS" ? c.billing : c.upgrade}
+          </button>
+          <a href="mailto:meet.wonderlife@gmail.com">{c.support}</a>
+          <a href={authLinks.logout}>{c.logout}</a>
+        </div>
       </section>
       <section className="danger-zone">
         <h2>{c.delete}</h2>
@@ -2106,6 +2124,7 @@ function LegalPagePlan({
       privacyText: [
         "PixelLife stores membership, board, record, reward, and subscription data needed to provide the service.",
         "Polar handles payment details. PixelLife does not store full card numbers.",
+        "When you leave, PixelLife data is deleted. Polar keeps past billing records for support and legal duties. Contact meet.wonderlife@gmail.com with your receipt email or order ID.",
       ],
       termsText:
         "PixelLife is a personal tracking tool, not medical, financial, or professional advice.",
@@ -2120,6 +2139,7 @@ function LegalPagePlan({
       privacyText: [
         "PixelLife는 서비스 제공에 필요한 회원, 보드, 기록, 보상과 구독 정보를 저장해요.",
         "결제 정보는 Polar가 처리하며 PixelLife는 전체 카드 번호를 저장하지 않아요.",
+        "회원 탈퇴 시 PixelLife 데이터는 삭제하고 Polar의 과거 결제 기록은 문의와 법적 의무를 위해 유지해요. 영수증 이메일 또는 주문 ID와 함께 meet.wonderlife@gmail.com으로 문의할 수 있어요.",
       ],
       termsText:
         "PixelLife는 개인 기록 도구이며 의료·금융·전문적인 조언을 제공하지 않아요.",
@@ -2134,6 +2154,7 @@ function LegalPagePlan({
       privacyText: [
         "PixelLife会保存提供服务所需的会员、面板、记录、奖励和订阅信息。",
         "付款信息由Polar处理，PixelLife不保存完整卡号。",
+        "退出后PixelLife数据会被删除，Polar会保留历史付款记录用于客服和法定义务。可将收据邮箱或订单ID发送至meet.wonderlife@gmail.com。",
       ],
       termsText: "PixelLife是个人记录工具，不构成医疗、金融或专业建议。",
       policy:
@@ -2147,6 +2168,7 @@ function LegalPagePlan({
       privacyText: [
         "PixelLifeはサービス提供に必要な会員、ボード、記録、報酬、購読情報を保存します。",
         "支払い情報はPolarが処理し、PixelLifeは完全なカード番号を保存しません。",
+        "退会時にPixelLifeデータは削除され、Polarの過去の支払い記録はサポートと法的義務のため保持されます。領収書メールまたは注文IDを添えてmeet.wonderlife@gmail.comへお問い合わせください。",
       ],
       termsText:
         "PixelLifeは個人記録ツールであり、医療・金融・専門的な助言ではありません。",

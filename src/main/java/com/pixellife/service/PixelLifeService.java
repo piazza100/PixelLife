@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -61,7 +62,6 @@ public class PixelLifeService {
     public void deleteAccount(long userId) {
         Map<String,Object> account = mapper.findMember(userId);
         if (account == null) throw new NoSuchElementException("Account not found");
-        if (isPlus(account)) throw new IllegalStateException("Cancel Plus and wait until the paid period ends before deleting your account");
         if (mapper.deleteMember(userId) != 1) throw new IllegalStateException("Account could not be deleted");
         memberIdCache.values().removeIf(id -> id == userId);
     }
@@ -86,7 +86,9 @@ public class PixelLifeService {
         account.put("id", userId);
         account.put("email", first.get("email"));
         account.put("plan", first.get("plan"));
+        account.put("paidFrom", localDateTime(first.get("paidFrom")));
         account.put("paidUntil", localDateTime(first.get("paidUntil")));
+        account.put("cancelAtPeriodEnd", first.get("cancelAtPeriodEnd"));
         account.put("totalXp", first.get("totalXp"));
         account.put("gradeCode", first.get("gradeCode"));
         account.put("effectivePlan", isPlus(account) ? "PLUS" : "FREE");
@@ -141,11 +143,24 @@ public class PixelLifeService {
     public record GuestEntry(LocalDate date, Integer value, Boolean success, String emoji, String note) {}
 
     @Transactional
+    public void saveTodayEntry(long userId, long boardId, LocalDate date, String timeZone,
+                               Integer value, Boolean success, String emoji, String note) {
+        LocalDate today = localToday(timeZone);
+        if (!date.equals(today)) throw new IllegalArgumentException("Only today's entry can be saved");
+        saveEntry(userId, boardId, date, today, value, success, emoji, note);
+    }
+
+    @Transactional
     public void saveEntry(long userId, long boardId, LocalDate date, Integer value, Boolean success, String emoji, String note) {
+        saveEntry(userId, boardId, date, LocalDate.now(), value, success, emoji, note);
+    }
+
+    private void saveEntry(long userId, long boardId, LocalDate date, LocalDate latestDate,
+                           Integer value, Boolean success, String emoji, String note) {
         BoardRow board = requireBoard(userId, boardId);
         if (!"ACTIVE".equals(board.getStatus())) throw new IllegalStateException("Finished boards are read-only");
         requireWritable(userId, boardId);
-        if (date.isBefore(board.getStartDate()) || date.isAfter(LocalDate.now()) || (board.getEndedAt() != null && date.isAfter(board.getEndedAt()))) throw new IllegalArgumentException("Entry date is outside the board range");
+        if (date.isBefore(board.getStartDate()) || date.isAfter(latestDate) || (board.getEndedAt() != null && date.isAfter(board.getEndedAt()))) throw new IllegalArgumentException("Entry date is outside the board range");
         if ("LEVEL".equals(board.getBoardType()) && (value == null || value < 1 || value > 5)) throw new IllegalArgumentException("Level must be 1 to 5");
         if ("CHECK".equals(board.getBoardType()) && success == null) throw new IllegalArgumentException("Yes or no is required");
         if ("MOOD".equals(board.getBoardType()) && (emoji == null || emoji.isBlank())) throw new IllegalArgumentException("Mood is required");
@@ -157,6 +172,15 @@ public class PixelLifeService {
     public void deleteEntry(long userId, long boardId, LocalDate date) {
         BoardRow board = requireBoard(userId, boardId);
         if (!"ACTIVE".equals(board.getStatus()) || !date.equals(LocalDate.now())) throw new IllegalStateException("Only today's active entry can be reset");
+        requireWritable(userId, boardId);
+        mapper.deleteEntry(boardId, date);
+    }
+
+    @Transactional
+    public void deleteTodayEntry(long userId, long boardId, LocalDate date, String timeZone) {
+        if (!date.equals(localToday(timeZone))) throw new IllegalArgumentException("Only today's entry can be reset");
+        BoardRow board = requireBoard(userId, boardId);
+        if (!"ACTIVE".equals(board.getStatus())) throw new IllegalStateException("Finished boards are read-only");
         requireWritable(userId, boardId);
         mapper.deleteEntry(boardId, date);
     }
@@ -314,6 +338,11 @@ public class PixelLifeService {
         if (value instanceof LocalDateTime time) return time;
         if (value instanceof java.sql.Timestamp time) return time.toLocalDateTime();
         return LocalDateTime.parse(String.valueOf(value).replace(' ', 'T'));
+    }
+
+    private LocalDate localToday(String timeZone) {
+        try { return LocalDate.now(ZoneId.of(timeZone == null || timeZone.isBlank() ? "UTC" : timeZone)); }
+        catch (Exception ignored) { throw new IllegalArgumentException("Invalid time zone"); }
     }
 
     private void cacheMemberId(String subject, long id) {
