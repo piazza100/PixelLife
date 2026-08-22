@@ -2931,6 +2931,7 @@ function Garden({
   const [zoom, setZoom] = useState(0.8);
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const drag = useRef({ x: 0, y: 0, px: 0, py: 0 });
+  const previewPlants = plants.slice(0, 4);
   return (
     <section className="garden">
       <div className="garden-head">
@@ -2978,7 +2979,7 @@ function Garden({
           <p className="empty-garden">{t.emptyPlants}</p>
         ) : mode === "list" ? (
           <div className="conservatory-list">
-            {plants.map((plant) => (
+            {previewPlants.map((plant) => (
               <CollectedPlant key={plant.id} plant={plant} t={t} />
             ))}
           </div>
