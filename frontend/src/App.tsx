@@ -83,7 +83,7 @@ const words = {
     done: "days done",
     wins: "wins",
     plus: "Plus is on",
-    plusSub: "Up to 30 active boards",
+    plusSub: "Up to 10 active boards",
     myBoards: "My boards",
     back: "← My boards",
     newBoard: "NEW BOARD",
@@ -139,7 +139,7 @@ const words = {
     done: "일 기록",
     wins: "회 기록",
     plus: "Plus 이용 중",
-    plusSub: "활성 보드 최대 30개",
+    plusSub: "활성 보드 최대 10개",
     myBoards: "진행 중 보드",
     back: "← 진행 중 보드",
     newBoard: "새 보드",
@@ -195,7 +195,7 @@ const words = {
     done: "天已记录",
     wins: "次记录",
     plus: "Plus 已启用",
-    plusSub: "最多30个活动面板",
+    plusSub: "最多10个活动面板",
     myBoards: "我的面板",
     back: "← 我的面板",
     newBoard: "新面板",
@@ -251,7 +251,7 @@ const words = {
     done: "日記録",
     wins: "回記録",
     plus: "Plus 利用中",
-    plusSub: "アクティブボード最大30個",
+    plusSub: "アクティブボード最大10個",
     myBoards: "マイボード",
     back: "← マイボード",
     newBoard: "新しいボード",
@@ -857,15 +857,6 @@ const screenWords: Record<Locale, Record<string, string>> = {
     fit: "全体",
   },
 };
-screenWords.en.needBoards = "Support PixelLife";
-screenWords.en.tryPlus = "Support with Plus";
-screenWords.ko.needBoards = "PixelLife를 응원해 주세요";
-screenWords.ko.tryPlus = "Plus로 후원";
-screenWords.zh.needBoards = "支持 PixelLife";
-screenWords.zh.tryPlus = "使用 Plus 支持";
-screenWords.ja.needBoards = "PixelLifeを応援";
-screenWords.ja.tryPlus = "Plusで応援";
-
 const pad = (n: number) => String(n).padStart(2, "0");
 const day = (offset = 0) => {
   const d = new Date();

@@ -23,7 +23,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/billing/polar/webhook").permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll())
-            .oauth2Login(oauth -> oauth.defaultSuccessUrl(frontendUrl, true))
+            .oauth2Login(oauth -> oauth
+                .defaultSuccessUrl(frontendUrl, true)
+                .failureHandler((request, response, exception) -> response.sendRedirect(frontendUrl)))
             .exceptionHandling(errors -> errors.defaultAuthenticationEntryPointFor(
                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
                 apiRequest))
