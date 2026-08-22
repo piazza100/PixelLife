@@ -384,15 +384,15 @@ public class PixelLifeService {
         m.put("COMPLETED_TYPE_COUNT",number(row.get("completedTypeCount")));m.put("LONG_BOARD_COUNT",number(row.get("longBoardCount")));return m;
     }
     private String grade(int xp) {
-        if (xp >= 150) return "CONSERVATOR";
-        if (xp >= 120) return "BOTANIST";
-        if (xp >= 90) return "GARDENER";
-        if (xp >= 60) return "GROVE";
-        if (xp >= 30) return "SPROUT";
+        if (xp >= 50) return "CONSERVATOR";
+        if (xp >= 30) return "BOTANIST";
+        if (xp >= 20) return "GARDENER";
+        if (xp >= 10) return "GROVE";
+        if (xp >= 5) return "SPROUT";
         return "SEED";
     }
 
-    private List<Map<String, Object>> gradeGuide() { return List.of(Map.of("code","SEED","xp",0,"species",2),Map.of("code","SPROUT","xp",30,"species",4),Map.of("code","GROVE","xp",60,"species",6),Map.of("code","GARDENER","xp",90,"species",8),Map.of("code","BOTANIST","xp",120,"species",10),Map.of("code","CONSERVATOR","xp",150,"species",12)); }
+    private List<Map<String, Object>> gradeGuide() { return List.of(Map.of("code","SEED","xp",0,"species",2),Map.of("code","SPROUT","xp",5,"species",4),Map.of("code","GROVE","xp",10,"species",6),Map.of("code","GARDENER","xp",20,"species",8),Map.of("code","BOTANIST","xp",30,"species",10),Map.of("code","CONSERVATOR","xp",50,"species",12)); }
     private int poolLimit(String grade){return switch(grade){case"SPROUT"->4;case"GROVE"->6;case"GARDENER"->8;case"BOTANIST"->10;case"CONSERVATOR"->12;default->2;};}
     private Map<String,Object> weightedPick(List<Map<String,Object>> pool){int total=pool.stream().mapToInt(v->number(v.get("weightValue"))).sum();int roll=ThreadLocalRandom.current().nextInt(total);for(Map<String,Object> item:pool){roll-=number(item.get("weightValue"));if(roll<0)return item;}return pool.get(0);}
     private String safeLocale(String locale) { return Set.of("en","ko","zh","ja").contains(locale) ? locale : "en"; }

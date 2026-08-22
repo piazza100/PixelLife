@@ -1987,7 +1987,7 @@ footer b {
 }
 .badge-grid article {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) auto;
+  grid-template-columns: 20px minmax(0, 1fr);
   align-items: center;
   gap: 7px;
   min-height: 46px;
@@ -1996,8 +1996,8 @@ footer b {
   background: #f2f1ec;
 }
 .badge-grid article > div {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   min-width: 0;
@@ -2042,6 +2042,7 @@ footer b {
   color: #16834a;
   font: 600 10px "DM Mono";
   white-space: nowrap;
+  grid-column: 2;
 }
 .garden-tabs {
   display: flex;

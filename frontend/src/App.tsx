@@ -12,6 +12,12 @@ import {
 } from "./api";
 
 type Locale = "en" | "ko" | "zh" | "ja";
+const gradeNames: Record<Locale, Record<string, string>> = {
+  en: { SEED: "Seed", SPROUT: "Sprout", GROVE: "Grove", GARDENER: "Gardener", BOTANIST: "Botanist", CONSERVATOR: "Conservator" },
+  ko: { SEED: "씨앗", SPROUT: "새싹", GROVE: "숲", GARDENER: "정원사", BOTANIST: "식물학자", CONSERVATOR: "보존가" },
+  zh: { SEED: "种子", SPROUT: "新芽", GROVE: "树林", GARDENER: "园丁", BOTANIST: "植物学家", CONSERVATOR: "守护者" },
+  ja: { SEED: "種", SPROUT: "芽", GROVE: "木立", GARDENER: "庭師", BOTANIST: "植物学者", CONSERVATOR: "保全者" },
+};
 type InputType = "level" | "check" | "mood";
 type Entry = { date: string; value: number; note?: string; emoji?: string };
 type Board = {
@@ -1241,6 +1247,12 @@ function App() {
   }, [view, locale, t.boardNameHint]);
   const board =
     boards.find((b) => b.id === selected) || boards[0] || emptyBoard;
+  const refreshRewards = async () => {
+    if (!member) return;
+    const nextRewards = await pixelLifeApi.rewards();
+    setRewards(nextRewards);
+    localStorage.setItem(`${REWARDS_CACHE_PREFIX}${member.id}`, JSON.stringify(nextRewards));
+  };
   const showError = (error: unknown, fallback: string) => {
     if (error instanceof ApiError && error.status === 401) {
       setNotice(actionWords[locale].sessionEnded);
@@ -1259,7 +1271,10 @@ function App() {
     setBusy(true);
     setNotice("");
     try {
-      if (member) await pixelLifeApi.resetToday(Number(board.id), today);
+      if (member) {
+        await pixelLifeApi.resetToday(Number(board.id), today);
+        void refreshRewards().catch((error) => console.error("PixelLife rewards refresh failed", error));
+      }
       setBoards((v) =>
         v.map((b) =>
           b.id === board.id
@@ -1401,6 +1416,7 @@ function App() {
               ? { success: checkSuccess, note: entry.note }
               : { emoji: mood, note: entry.note },
         );
+      if (member) void refreshRewards().catch((error) => console.error("PixelLife rewards refresh failed", error));
       setSaved(true);
       setTimeout(() => setSaved(false), 1300);
     } catch (error) {
@@ -1419,8 +1435,7 @@ function App() {
     try {
       if (member) {
         await pixelLifeApi.completeBoard(Number(board.id), today);
-        const nextRewards = await pixelLifeApi.rewards();
-        setRewards(nextRewards);
+        await refreshRewards();
       }
       setBoards((v) =>
         v.map((b) =>
@@ -1509,7 +1524,7 @@ function App() {
                 onClick={() => navigate("rewards", true)}
               >
                 <strong className="grade-chip">
-                  {rewards?.gradeCode || "SEED"}
+                  {gradeNames[locale][rewards?.gradeCode || "SEED"]}
                 </strong>
                 <span>
                   <small>{actionWords[locale].growthLabel}</small>
@@ -3712,8 +3727,8 @@ function RewardPreview({ locale }: { locale: Locale }) {
         <p>{c.help}</p>
       </div>
       <div className="preview-grade">
-        <b>SPROUT</b>
-        <span>180 XP</span>
+        <b>{gradeNames[locale].SPROUT}</b>
+        <span>6 XP</span>
       </div>
       <div className="preview-badges">
         <span>✓ Visitor</span>
@@ -3912,12 +3927,12 @@ function GuideRewardRules({ locale }: { locale: Locale }) {
     },
   }[locale];
   const grades = [
-    ["Seed", 0, 2],
-    ["Sprout", 30, 4],
-    ["Grove", 60, 6],
-    ["Gardener", 90, 8],
-    ["Botanist", 120, 10],
-    ["Conservator", 150, 12],
+    ["SEED", 0, 2],
+    ["SPROUT", 5, 4],
+    ["GROVE", 10, 6],
+    ["GARDENER", 20, 8],
+    ["BOTANIST", 30, 10],
+    ["CONSERVATOR", 50, 12],
   ];
   const badges = [
     ["Visitor", "7 days", "#4F8FD8"],
@@ -3945,9 +3960,9 @@ function GuideRewardRules({ locale }: { locale: Locale }) {
       </article>
       <h3>{c.grades}</h3>
       <div className="guide-grade-grid">
-        {grades.map(([name, xp, count]) => (
-          <article key={name}>
-            <b>{name}</b>
+        {grades.map(([code, xp, count]) => (
+          <article key={code}>
+            <b>{gradeNames[locale][String(code)]}</b>
             <span>{xp} XP</span>
             <strong>{count} species</strong>
           </article>
@@ -4229,11 +4244,11 @@ function GuideProgressGuide({ locale }: { locale: Locale }) {
   }[locale];
   const grades = [
     ["Seed", 0, 2],
-    ["Sprout", 30, 4],
-    ["Grove", 60, 6],
-    ["Gardener", 90, 8],
-    ["Botanist", 120, 10],
-    ["Conservator", 150, 12],
+    ["Sprout", 5, 4],
+    ["Grove", 10, 6],
+    ["Gardener", 20, 8],
+    ["Botanist", 30, 10],
+    ["Conservator", 50, 12],
   ];
   const details = {
     en: [
@@ -4532,11 +4547,11 @@ function GuideRewardCombined({ locale }: { locale: Locale }) {
   };
   const grades = [
     ["Seed", 0, 2],
-    ["Sprout", 30, 4],
-    ["Grove", 60, 6],
-    ["Gardener", 90, 8],
-    ["Botanist", 120, 10],
-    ["Conservator", 150, 12],
+    ["Sprout", 5, 4],
+    ["Grove", 10, 6],
+    ["Gardener", 20, 8],
+    ["Botanist", 30, 10],
+    ["Conservator", 50, 12],
   ] as const;
   const badgeRules = {
     en: [
