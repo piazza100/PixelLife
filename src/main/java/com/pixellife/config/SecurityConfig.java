@@ -8,13 +8,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 @Configuration
 public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http,
                                             @Value("${app.frontend-url}") String frontendUrl) throws Exception {
+        RequestMatcher apiRequest = request -> request.getRequestURI().startsWith("/api/");
+        RequestMatcher logoutGet = request -> "GET".equals(request.getMethod()) && "/logout".equals(request.getRequestURI());
         return http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/oauth2/**", "/login/**", "/error").permitAll()
@@ -24,8 +26,8 @@ public class SecurityConfig {
             .oauth2Login(oauth -> oauth.defaultSuccessUrl(frontendUrl, true))
             .exceptionHandling(errors -> errors.defaultAuthenticationEntryPointFor(
                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                new AntPathRequestMatcher("/api/**")))
-            .logout(logout -> logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET")).logoutSuccessUrl(frontendUrl).deleteCookies("JSESSIONID"))
+                apiRequest))
+            .logout(logout -> logout.logoutRequestMatcher(logoutGet).logoutSuccessUrl(frontendUrl).deleteCookies("JSESSIONID"))
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .ignoringRequestMatchers("/api/billing/polar/webhook"))

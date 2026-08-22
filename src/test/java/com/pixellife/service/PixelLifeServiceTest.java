@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
@@ -91,6 +92,21 @@ class PixelLifeServiceTest {
         service.saveEntry(1L, 9L, LocalDate.now(), 3, null, null, null);
 
         verify(mapper).upsertEntry(9L, LocalDate.now(), 3, null, null, null);
+    }
+
+    @Test
+    void publicEntryUsesServerClockInTheBrowserTimeZoneAndRejectsOtherDates() {
+        LocalDate today = LocalDate.now(ZoneId.of("America/New_York"));
+        BoardRow active = board(today.minusDays(2), LocalDateTime.now().minusDays(2), 30);
+        active.setId(9L);
+        when(mapper.findBoard(9L, 1L)).thenReturn(active);
+
+        service.saveTodayEntry(1L, 9L, today, "America/New_York", 3, null, null, null);
+        verify(mapper).upsertEntry(9L, today, 3, null, null, null);
+
+        assertThatThrownBy(() -> service.saveTodayEntry(1L, 9L, today.minusDays(1), "America/New_York", 3, null, null, null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Only today's entry can be saved");
     }
 
     @Test
