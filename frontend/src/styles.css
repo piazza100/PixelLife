@@ -1972,6 +1972,26 @@ footer b {
   color: #77766f;
   font-size: 10px;
 }
+.reward-species-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 8px;
+}
+.reward-species-list span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #555c55;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.reward-species-list i {
+  color: #16884c;
+  font-size: 16px;
+  font-style: normal;
+}
 .badge-guide {
   margin-top: 18px;
   padding: 29px;
@@ -2831,6 +2851,7 @@ body[data-board-type="mood"] .calendar-key {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-wrap: nowrap;
 }
 .preview-pool i {
   width: 12px;
@@ -2840,6 +2861,7 @@ body[data-board-type="mood"] .calendar-key {
 .preview-pool b {
   margin-left: 5px;
   color: #16884c;
+  white-space: nowrap;
 }
 .reward-empty {
   padding: 28px;

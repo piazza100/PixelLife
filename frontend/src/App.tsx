@@ -2724,11 +2724,14 @@ function RewardsPage({
         <span>✦</span>
         <div>
           <h2>{c.draw}</h2>
-          <p>
-            {rewards.speciesPool
-              .map((item) => `${item.symbol} ${speciesNames[locale][item.code] || item.name} ${item.chance}%`)
-              .join(" · ")}
-          </p>
+          <div className="reward-species-list">
+            {rewards.speciesPool.map((item) => (
+              <span key={item.code}>
+                <i aria-hidden="true">{item.symbol}</i>
+                {speciesNames[locale][item.code] || item.name}
+              </span>
+            ))}
+          </div>
           <div className="reward-colors">
             {rewards.unlockedColors.map((color) => (
               <i
@@ -3739,7 +3742,7 @@ function RewardPreview({ locale }: { locale: Locale }) {
         <i style={{ background: "#159651" }} />
         <i style={{ background: "#4F8FD8" }} />
         <i style={{ background: "#D6763E" }} />
-        <b>♣ ♜ ✿ ♠</b>
+        <b>♣ ♜ ✿</b>
       </div>
     </section>
   );
