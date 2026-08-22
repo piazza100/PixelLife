@@ -685,6 +685,12 @@ const actionWords: Record<Locale, Record<string, string>> = {
     badgeUnit: "個のバッジ",
   },
 };
+const boardLimitWords: Record<Locale, (plan: string, limit: number) => string> = {
+  en: (plan, limit) => `${plan} members can have up to ${limit} active boards. Complete or delete one before making another.`,
+  ko: (plan, limit) => `${plan} 회원은 활성 보드를 최대 ${limit}개까지 만들 수 있어요. 기존 보드를 완료하거나 삭제한 뒤 새로 만들어 주세요.`,
+  zh: (plan, limit) => `${plan}会员最多可拥有${limit}个活动面板。请先完成或删除一个面板。`,
+  ja: (plan, limit) => `${plan}会員が利用できる進行中ボードは最大${limit}個です。既存のボードを完了または削除してから作成してください。`,
+};
 const screenWords: Record<Locale, Record<string, string>> = {
   en: {
     allActive: "All active boards",
@@ -1284,10 +1290,19 @@ function App() {
       setNotice(t.boardNameRequired);
       return;
     }
-    if (!member && boards.filter((b) => !isFinished(b)).length >= 3) {
-      setNotice(
-        "Guest mode allows up to 3 active boards. Finish or delete one to make another.",
-      );
+    const activeCount = boards.filter((b) => !isFinished(b)).length;
+    const boardLimit = member?.activeBoardLimit || 3;
+    if (activeCount >= boardLimit) {
+      const plan = member
+        ? member.effectivePlan
+        : locale === "ko"
+          ? "비회원"
+          : locale === "zh"
+            ? "访客"
+            : locale === "ja"
+              ? "ゲスト"
+              : "Guest";
+      setNotice(boardLimitWords[locale](plan, boardLimit));
       return;
     }
     setBusy(true);
@@ -1332,7 +1347,16 @@ function App() {
       setTitle("");
       navigate("detail", true);
     } catch (error) {
-      showError(error, actionWords[locale].createError);
+      if (
+        error instanceof ApiError &&
+        error.status === 409 &&
+        error.message.includes("active board")
+      ) {
+        const plan = member?.effectivePlan || "Guest";
+        setNotice(boardLimitWords[locale](plan, member?.activeBoardLimit || 3));
+      } else {
+        showError(error, actionWords[locale].createError);
+      }
     } finally {
       setBusy(false);
     }
@@ -1732,6 +1756,7 @@ function App() {
           member={member}
           locale={locale}
           onBack={() => navigate("home")}
+          onUpgrade={upgrade}
           onPortal={async () => {
             if (busy) return;
             setBusy(true);
@@ -1966,12 +1991,14 @@ function AccountPage({
   member,
   locale,
   onBack,
+  onUpgrade,
   onPortal,
   onDelete,
 }: {
   member: Member;
   locale: Locale;
   onBack: () => void;
+  onUpgrade: () => void;
   onPortal: () => void;
   onDelete: () => void;
 }) {
@@ -1982,6 +2009,7 @@ function AccountPage({
       plan: "Current plan",
       active: "active boards",
       billing: "Manage billing",
+      upgrade: "Start Plus",
       logout: "Log out",
       delete: "Leave PixelLife",
       deleteHelp:
@@ -1994,6 +2022,7 @@ function AccountPage({
       plan: "현재 요금제",
       active: "개 활성 보드",
       billing: "결제 관리",
+      upgrade: "Plus 시작",
       logout: "로그아웃",
       delete: "회원 탈퇴",
       deleteHelp:
@@ -2006,6 +2035,7 @@ function AccountPage({
       plan: "当前方案",
       active: "个活动面板",
       billing: "管理付款",
+      upgrade: "开通Plus",
       logout: "退出登录",
       delete: "退出会员",
       deleteHelp:
@@ -2018,6 +2048,7 @@ function AccountPage({
       plan: "現在のプラン",
       active: "個の進行中ボード",
       billing: "支払いを管理",
+      upgrade: "Plusを始める",
       logout: "ログアウト",
       delete: "退会",
       deleteHelp:
@@ -2041,8 +2072,11 @@ function AccountPage({
             {member.activeBoardLimit} {c.active}
           </small>
         </div>
-        <button className="primary" onClick={onPortal}>
-          {c.billing}
+        <button
+          className="primary"
+          onClick={member.effectivePlan === "PLUS" ? onPortal : onUpgrade}
+        >
+          {member.effectivePlan === "PLUS" ? c.billing : c.upgrade}
         </button>
         <a href={authLinks.logout}>{c.logout}</a>
       </section>

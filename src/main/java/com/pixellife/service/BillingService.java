@@ -71,11 +71,15 @@ public class BillingService {
 
     public String createCustomerPortal(long userId) {
         if (accessToken.isBlank()) throw new IllegalStateException("Plus billing is not configured yet");
+        String customerId = mapper.findPolarCustomerId(userId);
+        Map<String,Object> request = customerId == null || customerId.isBlank()
+            ? Map.of("external_customer_id", String.valueOf(userId), "return_url", frontendUrl)
+            : Map.of("customer_id", customerId, "return_url", frontendUrl);
         Map<String,Object> response = restClient.post()
             .uri("/customer-sessions/")
             .header("Authorization", "Bearer " + accessToken)
             .contentType(MediaType.APPLICATION_JSON)
-            .body(Map.of("external_customer_id", String.valueOf(userId), "return_url", frontendUrl))
+            .body(request)
             .retrieve().body(Map.class);
         Object url = response == null ? null : response.get("customer_portal_url");
         if (url == null || String.valueOf(url).isBlank()) throw new IllegalStateException("Customer portal URL was not returned");

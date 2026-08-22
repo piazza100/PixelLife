@@ -29,6 +29,9 @@ public interface PixelLifeMapper {
     @Select("SELECT id,email,display_name AS displayName,avatar_url AS avatarUrl,plan,paid_until AS paidUntil,total_xp AS totalXp,grade_code AS gradeCode FROM users WHERE id=#{userId}")
     Map<String,Object> findMember(Long userId);
 
+    @Select("SELECT polar_customer_id FROM users WHERE id=#{userId}")
+    String findPolarCustomerId(Long userId);
+
     @Select("""
         SELECT u.id AS memberId,u.email,u.plan,u.paid_until AS paidUntil,u.total_xp AS totalXp,u.grade_code AS gradeCode,
                b.id AS boardId,b.name AS boardName,b.board_type AS boardType,b.color,b.reward_species_code AS rewardSpeciesCode,
