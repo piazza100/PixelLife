@@ -75,8 +75,8 @@ const words = {
     sub: "Pick a board and add today.",
     new: "＋ New board",
     active: "active",
-    archived: "Finished boards",
-    archiveHelp: "Your finished boards stay here.",
+    archived: "Completed boards",
+    archiveHelp: "Your completed boards stay here.",
     day: "DAY",
     ready: "Ready to start",
     missed: "days missed · Start again today",
@@ -187,8 +187,8 @@ const words = {
     sub: "选择一个面板，记录今天。",
     new: "＋ 新面板",
     active: "进行中",
-    archived: "已结束面板",
-    archiveHelp: "结束的面板会保存在这里。",
+    archived: "已完成面板",
+    archiveHelp: "完成的面板会保存在这里。",
     day: "第",
     ready: "准备开始",
     missed: "天未记录 · 今天重新开始",
@@ -243,8 +243,8 @@ const words = {
     sub: "ボードを選んで今日を記録しましょう。",
     new: "＋ 新しいボード",
     active: "進行中",
-    archived: "終了したボード",
-    archiveHelp: "終了したボードはここで見返せます。",
+    archived: "完了したボード",
+    archiveHelp: "完了したボードはここで見返せます。",
     day: "日目",
     ready: "始める準備ができました",
     missed: "日未記録 · 今日から再開",
@@ -306,10 +306,10 @@ const extraWords: Record<Locale, Record<string, string>> = {
     home: "← Home",
     loading: "Loading your garden…",
     serverWaking: "The server is waking up. Please try again soon.",
-    finish: "Finish board",
-    finishConfirm: "Finish this board? You cannot add more records after this.",
-    finishError: "Could not finish this board",
-    finishLocked: "Finish opens on",
+    finish: "Complete board",
+    finishConfirm: "Complete this board? You cannot add more records after this.",
+    finishError: "Could not complete this board",
+    finishLocked: "Available to complete",
     finishRule:
       "Finish after at least 7 calendar days and the goal date. XP is awarded once.",
     readOnly: "READ ONLY",
@@ -364,10 +364,10 @@ const extraWords: Record<Locale, Record<string, string>> = {
     home: "← 홈",
     loading: "가든을 불러오는 중…",
     serverWaking: "서버가 깨어나는 중이에요. 잠시 후 다시 시도해 주세요.",
-    finish: "보드 종료",
-    finishConfirm: "이 보드를 종료할까요? 종료 후에는 기록을 추가할 수 없어요.",
-    finishError: "보드를 종료하지 못했어요",
-    finishLocked: "종료 가능일",
+    finish: "보드 완료",
+    finishConfirm: "이 보드를 완료할까요? 완료 후에는 기록을 추가할 수 없어요.",
+    finishError: "보드를 완료하지 못했어요",
+    finishLocked: "완료 가능일",
     finishRule:
       "생성 후 최소 7일과 목표 종료일이 지나야 종료할 수 있으며 XP는 한 번만 지급돼요.",
     readOnly: "읽기 전용",
@@ -421,10 +421,10 @@ const extraWords: Record<Locale, Record<string, string>> = {
     close: "关闭消息",
     home: "← 首页",
     loading: "正在加载花园…",
-    finish: "结束面板",
-    finishConfirm: "要结束此面板吗？结束后无法再添加记录。",
-    finishError: "无法结束面板",
-    finishLocked: "可结束日期",
+    finish: "完成面板",
+    finishConfirm: "要完成此面板吗？完成后无法再添加记录。",
+    finishError: "无法完成面板",
+    finishLocked: "可完成日期",
     finishRule: "创建至少7天且到达目标日期后才能结束，XP只奖励一次。",
     readOnly: "只读",
     recordsSafe: "你的记录已安全保存。",
@@ -477,10 +477,10 @@ const extraWords: Record<Locale, Record<string, string>> = {
     close: "メッセージを閉じる",
     home: "← ホーム",
     loading: "ガーデンを読み込み中…",
-    finish: "ボードを終了",
-    finishConfirm: "このボードを終了しますか？終了後は記録を追加できません。",
-    finishError: "ボードを終了できませんでした",
-    finishLocked: "終了できる日",
+    finish: "ボードを完了",
+    finishConfirm: "このボードを完了しますか？完了後は記録を追加できません。",
+    finishError: "ボードを完了できませんでした",
+    finishLocked: "完了できる日",
     finishRule:
       "作成から最低7日かつ目標日以降に終了でき、XPは一度だけ付与されます。",
     readOnly: "読み取り専用",
@@ -530,10 +530,10 @@ extraWords.zh.serverWaking = "服务器正在启动，请稍后再试。";
 extraWords.ja.serverWaking =
   "サーバーを起動しています。少し待ってからもう一度お試しください。";
 extraWords.en.periodEnded = "GOAL PERIOD ENDED";
-extraWords.en.periodEndedTitle = "This board is ready to finish.";
+extraWords.en.periodEndedTitle = "This board is ready to complete.";
 extraWords.en.periodEndedHelp =
-  "Today's record is closed because the goal date has passed. Review your board and finish it when you are ready.";
-extraWords.ko.periodEnded = "목표 기간 종료";
+  "Today's record is closed because the goal date has passed. Review your board and complete it when you are ready.";
+extraWords.ko.periodEnded = "목표 기간 완료";
 extraWords.ko.periodEndedTitle = "이 보드는 완료할 수 있어요.";
 extraWords.ko.periodEndedHelp =
   "목표 종료일이 지나 오늘 기록은 입력할 수 없어요. 기록을 확인한 뒤 보드를 완료해 주세요.";
@@ -546,9 +546,9 @@ extraWords.ja.periodEndedTitle = "このボードは完了できます。";
 extraWords.ja.periodEndedHelp =
   "目標終了日を過ぎたため、今日の記録は追加できません。記録を確認してボードを完了してください。";
 extraWords.en.finishRule =
-  "A goal board can finish halfway through its period. Endless boards open on day 7. XP is awarded once.";
+  "A goal board can be completed from its middle day. Endless boards open on day 7. XP is awarded once.";
 extraWords.ko.finishRule =
-  "목표 기간의 절반이 지난 날부터 완료할 수 있어요. 무기한 보드는 7일차부터 가능하며 XP는 한 번만 지급돼요.";
+  "목표 기간의 중간 일차부터 완료할 수 있어요. 무기한 보드는 7일차부터 가능하며 XP는 한 번만 지급돼요.";
 extraWords.zh.finishRule =
   "目标面板经过一半周期后可完成。无限期面板从第7天开放，XP只奖励一次。";
 extraWords.ja.finishRule =
@@ -702,7 +702,7 @@ const screenWords: Record<Locale, Record<string, string>> = {
   en: {
     allActive: "All active boards",
     complete: "complete",
-    allFinished: "All finished boards",
+    allFinished: "All completed boards",
     completedMove: "Completed boards move their plants to the Conservatory.",
     needBoards: "Need more boards?",
     tryPlus: "Try Plus",
@@ -712,7 +712,7 @@ const screenWords: Record<Locale, Record<string, string>> = {
     boards: "boards",
     activeListHelp: "Boards you can record today.",
     finishedListHelp:
-      "Finished boards are read-only and their plants stay in the Conservatory.",
+      "Completed boards are read-only and their plants stay in the Conservatory.",
     pixelGarden: "PIXEL GARDEN",
     conservatory: "CONSERVATORY",
     growingPlants: "Growing plants",
@@ -731,7 +731,7 @@ const screenWords: Record<Locale, Record<string, string>> = {
     gardenHelp: "One board grows one plant. New plants come first.",
     allGrowing: "All growing plants",
     completedPlants: "All completed plants.",
-    completedPlantsHelp: "These are the plants earned from finished boards.",
+    completedPlantsHelp: "These are the plants earned from completed boards.",
     openCollection: "Open full collection",
     list: "List",
     map: "Map",
@@ -2433,8 +2433,8 @@ function GuidePage({
         ],
         ["Grow a plant", "Every board grows one plant from its own records."],
         [
-          "Finish and collect",
-          "A finished board becomes read-only. Its plant moves to the Conservatory.",
+          "Complete and collect",
+          "A completed board becomes read-only. Its plant moves to the Conservatory.",
         ],
       ],
     },
@@ -2488,7 +2488,7 @@ function GuidePage({
         ["记录今天", "点一次生成一个像素，短笔记可选。"],
         ["查看规律", "在统计中查看记录率和类型图表。"],
         ["培育植物", "每个面板用自己的记录培育一株植物。"],
-        ["结束并收集", "结束的面板变为只读，植物移入植物园。"],
+        ["完成并收集", "完成的面板变为只读，植物移入植物园。"],
       ],
     },
     ja: {
@@ -2517,8 +2517,8 @@ function GuidePage({
         ["パターンを見る", "統計で記録率と種類別チャートを確認します。"],
         ["植物を育てる", "一つのボードが記録から一つの植物を育てます。"],
         [
-          "終了して集める",
-          "終了したボードは読み取り専用になり、植物は温室へ移ります。",
+          "完了して集める",
+          "完了したボードは読み取り専用になり、植物は温室へ移ります。",
         ],
       ],
     },
