@@ -75,7 +75,10 @@ public class PixelLifeController {
     }
 
     @GetMapping("/rewards")
-    public Map<String,Object> rewards(@AuthenticationPrincipal OidcUser user) { return service.rewards(service.memberId(user.getSubject())); }
+    public Map<String,Object> rewards(@AuthenticationPrincipal OidcUser user,
+                                     @RequestHeader(value="X-Time-Zone", defaultValue="UTC") String timeZone) {
+        return service.rewards(service.memberId(user.getSubject()), timeZone);
+    }
 
     @DeleteMapping("/me") @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAccount(@AuthenticationPrincipal OidcUser user) {

@@ -275,9 +275,13 @@ public class PixelLifeService {
     }
 
     @Transactional
-    public Map<String, Object> rewards(long userId) {
-        mapper.recordVisit(userId, LocalDate.now());
+    public Map<String, Object> rewards(long userId, String timeZone) {
+        mapper.recordVisit(userId, localToday(timeZone));
         return rewards(userId, member(userId));
+    }
+
+    public Map<String, Object> rewards(long userId) {
+        return rewards(userId, "UTC");
     }
 
     @Transactional(readOnly = true)
@@ -290,7 +294,7 @@ public class PixelLifeService {
         Map<String, Object> progress = new HashMap<>();
         progress.put("totalXp", account.get("totalXp")); progress.put("gradeCode", account.get("gradeCode"));
         progress.put("badges", badgeProgress(snapshot.metrics(), snapshot.badges())); progress.put("plants", mapper.findPlants(userId));
-        String grade=String.valueOf(progress.get("gradeCode"));List<Map<String,Object>> pool=mapper.findSpeciesPool(poolLimit(grade));int total=pool.stream().mapToInt(v->number(v.get("weightValue"))).sum();
+        String grade=String.valueOf(progress.get("gradeCode"));List<Map<String,Object>> pool=mapper.findSpeciesPool(poolLimit(grade)).stream().map(HashMap::new).map(v -> (Map<String,Object>) v).toList();int total=pool.stream().mapToInt(v->number(v.get("weightValue"))).sum();
         pool.forEach(v->v.put("chance",Math.round(number(v.get("weightValue"))*1000d/total)/10d));
         progress.put("speciesPool",pool);progress.put("unlockedColors",mapper.findUnlockedColors(userId));progress.put("gradeGuide", gradeGuide()); return progress;
     }

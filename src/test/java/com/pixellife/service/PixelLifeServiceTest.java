@@ -110,6 +110,20 @@ class PixelLifeServiceTest {
     }
 
     @Test
+    void visitUsesTheBrowserTimeZoneDate() {
+        when(mapper.findRewardMetrics(1L)).thenReturn(Map.of(
+            "visitDays", 0, "pixelCount", 0, "plantCount", 0, "speciesCount", 0,
+            "perfectCount", 0, "noteCount", 0, "maxStreak", 0,
+            "completedTypeCount", 0, "longBoardCount", 0
+        ));
+        when(mapper.findBadges(1L)).thenReturn(List.of());
+        when(mapper.findPlants(1L)).thenReturn(List.of());
+        service.rewards(1L, "Asia/Seoul");
+
+        verify(mapper).recordVisit(1L, LocalDate.now(ZoneId.of("Asia/Seoul")));
+    }
+
+    @Test
     void customGoalMustBeAtLeastThreeDays() {
         when(mapper.findBoardCreationContextForUpdate(1L)).thenReturn(Map.of("plan", "FREE", "gradeCode", "SEED", "activeCount", 0));
 
