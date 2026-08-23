@@ -198,6 +198,12 @@ header {
   color: var(--board-color);
   font: 500 11px "DM Mono";
 }
+.check-type-mark,
+.setup-card fieldset button.check-type-option > b {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
 .board-card small {
   font: 500 8px "DM Mono";
   letter-spacing: 1.2px;
@@ -1456,6 +1462,10 @@ footer b {
 .archive-list button > span {
   font: 500 8px "DM Mono";
   color: #536057;
+}
+.archive-list button > span.check-type-mark {
+  font-size: 13px;
+  font-weight: 700;
 }
 .archive-list small {
   grid-column: 2;
@@ -3344,10 +3354,21 @@ header {
 }
 .sample-board-grid > article:nth-child(2) i:not(.level-5):after {
   content: "×";
-  font-size: 9px;
+  font-size: 18px;
   font-weight: 900;
   line-height: 1;
   transform: translateY(-1px);
+}
+.sample-board-grid > article:nth-child(2) i.level-5:after {
+  content: "✓";
+  color: #fff;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+}
+.sample-board-grid > article:nth-child(3) i {
+  font-size: 17px;
+  line-height: 1;
 }
 .guide-species {
   width: min(980px, calc(100% - 36px));
@@ -3466,6 +3487,7 @@ body[data-board-type="check"] .calendar-grid button.done.level-0 {
 body[data-board-type="check"] .calendar-grid button.done.level-0:before {
   content: "×";
   color: #a75447;
+  font-size: 20px;
 }
 .board-card.compact .card-pixels i.level-0 {
   background: #f0dfda;
@@ -3474,6 +3496,22 @@ body[data-board-type="check"] .calendar-grid button.done.level-0:before {
 .board-card.compact .card-pixels i.done {
   font-size: 8px;
   font-weight: 900;
+}
+.board-card.compact .card-pixels i.done.level-0 {
+  font-size: 13px;
+  line-height: 1;
+}
+.board-card.compact.type-check .card-pixels i.done {
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+}
+.board-card.compact.type-mood .card-pixels i.done {
+  font-size: 16px;
+  line-height: 1;
+}
+.board-card.compact.type-mood .type-icon {
+  font-size: 16px;
 }
 .guide-progress {
   margin-bottom: 80px;
@@ -3544,6 +3582,9 @@ body[data-board-type="check"] .calendar-grid button.done.level-0:before {
 }
 .guide-types > div:nth-child(2) > b:after {
   content: "×";
+  width: 13px;
+  font-size: 15px;
+  font-weight: 700;
 }
 @media (max-width: 760px) {
   .guide-types {
@@ -3849,9 +3890,13 @@ body[data-board-type="check"] .calendar-grid button.done.level-0:before {
 }
 .sample-board-grid > article:nth-child(2) > b:after {
   content: "✓ ×";
-  font-size: 10px;
+  font-size: 16px;
   line-height: 1;
   transform: translateY(-1px);
+}
+.sample-board-grid > article:nth-child(3) > b {
+  font-size: 16px;
+  line-height: 1;
 }
 body[data-board-type="check"] .detail-head h1:before {
   content: "✓ ×";
@@ -3862,7 +3907,7 @@ body[data-board-type="check"] .detail-head h1:before {
   border-radius: 7px;
   background: #e7f4ea;
   color: var(--board-color);
-  font: 700 9px "DM Mono";
+  font: 700 12px "DM Mono";
   vertical-align: middle;
 }
 .guide-reward-combined,

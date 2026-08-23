@@ -1633,7 +1633,7 @@ function App() {
               <div className="archive-list">
                 {archived.slice(0, 3).map((b) => (
                   <button key={b.id} onClick={() => open(b.id)}>
-                    <span>
+                    <span className={b.inputType === "check" ? "check-type-mark" : ""}>
                       {b.inputType === "level"
                         ? "1–5"
                         : b.inputType === "check"
@@ -1890,7 +1890,7 @@ function App() {
               ).map((v) => (
                 <button
                   key={v.id}
-                  className={inputType === v.id ? "selected" : ""}
+                  className={`${inputType === v.id ? "selected" : ""} ${v.id === "check" ? "check-type-option" : ""}`}
                   onClick={() => setInputType(v.id)}
                 >
                   <b>{v.icon}</b>
@@ -2786,12 +2786,12 @@ function BoardCard({
   );
   return (
     <button
-      className={`board-card compact ${locked ? "locked" : ""}`}
+      className={`board-card compact type-${board.inputType} ${locked ? "locked" : ""}`}
       onClick={onOpen}
       style={{ "--board-color": board.color } as React.CSSProperties}
     >
       <div className="card-top">
-        <span className="type-icon">
+        <span className={`type-icon ${board.inputType === "check" ? "check-type-mark" : ""}`}>
           {board.inputType === "level"
             ? "1–5"
             : board.inputType === "check"
