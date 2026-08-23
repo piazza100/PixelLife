@@ -1478,6 +1478,7 @@ function App() {
   const active = boards.filter((b) => !isFinished(b)),
     archived = boards.filter(isFinished);
   const plants = member ? rewards?.plants || [] : [];
+  const showHomeGuide = view === "home" && boards.length === 0;
   const writable = (_b: Board) => true;
   if (member === undefined)
     return (
@@ -1566,7 +1567,7 @@ function App() {
           </button>
         </div>
       )}
-      {view === "home" && (
+      {view === "home" && !showHomeGuide && (
         <main className="home">
           <section className="intro">
             <div>
@@ -1721,13 +1722,14 @@ function App() {
           </section>
         </main>
       )}
-      {view === "guide" && (
+      {(view === "guide" || showHomeGuide) && (
         <>
           <GuidePage
             locale={locale}
             onBack={() => navigate("home")}
             onStart={() => navigate("setup", true)}
             onRewards={() => {}}
+            showBack={view === "guide"}
           />
           <GuideSamples locale={locale} />
           <GuideRewardCombined locale={locale} />
@@ -2395,11 +2397,13 @@ function GuidePage({
   onBack,
   onStart,
   onRewards,
+  showBack = true,
 }: {
   locale: Locale;
   onBack: () => void;
   onStart: () => void;
   onRewards: () => void;
+  showBack?: boolean;
 }) {
   const c = {
     en: {
@@ -2516,9 +2520,11 @@ function GuidePage({
   }[locale];
   return (
     <main className="guide-page">
-      <button className="back" onClick={onBack}>
-        {c.back}
-      </button>
+      {showBack && (
+        <button className="back" onClick={onBack}>
+          {c.back}
+        </button>
+      )}
       <section className="guide-hero">
         <p className="eyebrow">{c.eye}</p>
         <h1>{c.title}</h1>
