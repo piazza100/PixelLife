@@ -46,7 +46,11 @@ public interface PixelLifeMapper {
         LEFT JOIN boards b ON b.user_id=u.id
         LEFT JOIN plant_species s ON s.code=b.reward_species_code
         WHERE u.auth_provider=#{provider} AND u.provider_subject=#{subject}
-        ORDER BY b.created_at DESC,b.id DESC
+        ORDER BY
+          CASE WHEN b.status='ACTIVE' THEN 0 ELSE 1 END,
+          CASE WHEN b.status='ACTIVE' THEN b.created_at END DESC,
+          CASE WHEN b.status='COMPLETED' THEN b.completed_at END DESC,
+          b.id DESC
         """)
     List<Map<String,Object>> findBootstrapRows(String provider, String subject);
 
@@ -74,7 +78,7 @@ public interface PixelLifeMapper {
     @Insert("INSERT IGNORE INTO daily_visits(user_id, visit_date) VALUES(#{userId}, #{date})")
     void recordVisit(Long userId, LocalDate date);
 
-    @Select("SELECT b.id,b.user_id,b.name,b.board_type,b.color,b.reward_species_code,b.reward_color_code,s.name AS reward_species_name,s.unicode_symbol AS reward_species_symbol,b.start_date,b.goal_days,b.status,b.ended_at,b.completed_at,b.final_score,b.xp_awarded,b.created_at FROM boards b JOIN plant_species s ON s.code=b.reward_species_code WHERE b.user_id=#{userId} ORDER BY b.created_at DESC, b.id DESC")
+    @Select("SELECT b.id,b.user_id,b.name,b.board_type,b.color,b.reward_species_code,b.reward_color_code,s.name AS reward_species_name,s.unicode_symbol AS reward_species_symbol,b.start_date,b.goal_days,b.status,b.ended_at,b.completed_at,b.final_score,b.xp_awarded,b.created_at FROM boards b JOIN plant_species s ON s.code=b.reward_species_code WHERE b.user_id=#{userId} ORDER BY CASE WHEN b.status='ACTIVE' THEN 0 ELSE 1 END, CASE WHEN b.status='ACTIVE' THEN b.created_at END DESC, CASE WHEN b.status='COMPLETED' THEN b.completed_at END DESC, b.id DESC")
     List<BoardRow> findBoards(Long userId);
 
     @Select("SELECT b.id,b.user_id,b.name,b.board_type,b.color,b.reward_species_code,b.reward_color_code,s.name AS reward_species_name,s.unicode_symbol AS reward_species_symbol,b.start_date,b.goal_days,b.status,b.ended_at,b.completed_at,b.final_score,b.xp_awarded,b.created_at FROM boards b JOIN plant_species s ON s.code=b.reward_species_code WHERE b.id=#{id} AND b.user_id=#{userId}")
@@ -160,7 +164,7 @@ public interface PixelLifeMapper {
     @Update("UPDATE users SET grade_code=#{grade} WHERE id=#{userId}")
     void updateGrade(Long userId, String grade);
 
-    @Select("SELECT p.id,p.species_code AS speciesCode,s.name AS speciesName,s.unicode_symbol AS symbol,p.color_code AS colorCode,c.css_color AS cssColor,p.map_x AS mapX,p.map_y AS mapY,p.earned_at AS earnedAt,p.board_id AS boardId,b.name AS boardName,b.xp_awarded AS xpAwarded FROM plants p JOIN plant_species s ON s.code=p.species_code JOIN plant_colors c ON c.code=p.color_code JOIN boards b ON b.id=p.board_id WHERE p.user_id=#{userId} ORDER BY p.earned_at DESC")
+    @Select("SELECT p.id,p.species_code AS speciesCode,s.name AS speciesName,s.unicode_symbol AS symbol,p.color_code AS colorCode,c.css_color AS cssColor,p.map_x AS mapX,p.map_y AS mapY,p.earned_at AS earnedAt,p.board_id AS boardId,b.name AS boardName,b.xp_awarded AS xpAwarded FROM plants p JOIN plant_species s ON s.code=p.species_code JOIN plant_colors c ON c.code=p.color_code JOIN boards b ON b.id=p.board_id WHERE p.user_id=#{userId} ORDER BY b.completed_at DESC, p.id DESC")
     List<Map<String, Object>> findPlants(Long userId);
 
     @Select("SELECT MAX(streak) FROM (SELECT COUNT(*) streak FROM (SELECT entry_date,DATE_SUB(entry_date,INTERVAL ROW_NUMBER() OVER(ORDER BY entry_date) DAY) grp FROM (SELECT DISTINCT e.entry_date FROM pixel_entries e JOIN boards b ON b.id=e.board_id WHERE b.user_id=#{userId}) d) x GROUP BY grp) y")
