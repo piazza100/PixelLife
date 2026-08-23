@@ -680,10 +680,22 @@ footer b {
     padding: 27px 18px;
   }
   .plus-summary {
-    align-items: flex-start;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
   }
   .plus-summary > button {
-    display: none;
+    display: block;
+    flex: 0 0 auto;
+    padding: 9px 12px;
+    border-radius: 9px;
+    background: #159651;
+    color: #fff;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .plus-summary > div {
+    min-width: 0;
   }
   footer {
     margin: 0 13px;
