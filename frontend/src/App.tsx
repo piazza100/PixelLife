@@ -27,9 +27,9 @@ type BoardTemplate = {
 };
 const boardTemplates: BoardTemplate[] = [
   { icon: "☺", title: { en: "How was my day?", ko: "오늘 하루는 어땠나요?", zh: "今天过得怎么样？", ja: "今日はどうだった？" }, inputType: "mood", goalDays: 30 },
+  { icon: "⚡", title: { en: "How was exercise today?", ko: "오늘 운동은 어땠나요?", zh: "今天运动得怎么样？", ja: "今日の運動はどうだった？" }, inputType: "level", goalDays: 30 },
   { icon: "☾", title: { en: "Sleep quality", ko: "수면의 질", zh: "睡眠质量", ja: "睡眠の質" }, inputType: "level", goalDays: 30 },
-  { icon: "⚡", title: { en: "Exercise", ko: "운동 하기", zh: "锻炼", ja: "運動する" }, inputType: "level", goalDays: 30 },
-  { icon: "◎", title: { en: "Do homework", ko: "숙제 하기", zh: "做作业", ja: "宿題をする" }, inputType: "level", goalDays: 10 },
+  { icon: "◎", title: { en: "Do homework", ko: "숙제 하기", zh: "做作业", ja: "宿題をする" }, inputType: "check", goalDays: 10 },
   { icon: "▤", title: { en: "Read today", ko: "오늘 독서", zh: "今天阅读", ja: "今日の読書" }, inputType: "check", goalDays: 30 },
   { icon: "↟", title: { en: "Walk 5,000 steps", ko: "5천보 걷기", zh: "步行5000步", ja: "5,000歩歩く" }, inputType: "check", goalDays: 30 },
   { icon: "$", title: { en: "No-spend day", ko: "무지출 하루", zh: "无消费日", ja: "使わない日" }, inputType: "check", goalDays: 30 },
