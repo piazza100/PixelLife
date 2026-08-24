@@ -19,6 +19,22 @@ const gradeNames: Record<Locale, Record<string, string>> = {
   ja: { SEED: "種", SPROUT: "芽", GROVE: "木立", GARDENER: "庭師", BOTANIST: "植物学者", CONSERVATOR: "保全者" },
 };
 type InputType = "level" | "check" | "mood";
+type BoardTemplate = {
+  icon: string;
+  title: Record<Locale, string>;
+  inputType: InputType;
+  goalDays: number | null;
+};
+const boardTemplates: BoardTemplate[] = [
+  { icon: "☺", title: { en: "How was my day?", ko: "오늘 하루는 어땠나요?", zh: "今天过得怎么样？", ja: "今日はどうだった？" }, inputType: "mood", goalDays: 30 },
+  { icon: "☾", title: { en: "Sleep quality", ko: "수면의 질", zh: "睡眠质量", ja: "睡眠の質" }, inputType: "level", goalDays: 30 },
+  { icon: "⚡", title: { en: "Energy today", ko: "오늘의 에너지", zh: "今日精力", ja: "今日の元気" }, inputType: "level", goalDays: 30 },
+  { icon: "◎", title: { en: "Focus today", ko: "오늘의 집중", zh: "今日专注", ja: "今日の集中" }, inputType: "level", goalDays: 10 },
+  { icon: "▤", title: { en: "Read today", ko: "오늘 독서", zh: "今天阅读", ja: "今日の読書" }, inputType: "check", goalDays: 30 },
+  { icon: "↟", title: { en: "Move my body", ko: "몸 움직이기", zh: "活动身体", ja: "体を動かす" }, inputType: "check", goalDays: 30 },
+  { icon: "$", title: { en: "No-spend day", ko: "무지출 하루", zh: "无消费日", ja: "使わない日" }, inputType: "check", goalDays: 30 },
+  { icon: "✦", title: { en: "One small win", ko: "오늘의 작은 성취", zh: "今天的小成就", ja: "今日の小さな達成" }, inputType: "check", goalDays: null },
+];
 type Entry = { date: string; value: number; note?: string; emoji?: string };
 type Board = {
   id: string;
@@ -575,13 +591,13 @@ extraWords.ko.plusSub = "활성 보드 최대 10개 · 완료하며 보상을 �
 extraWords.zh.plusSub = "最多10个活动面板 · 完成后可持续累积奖励";
 extraWords.ja.plusSub = "進行中ボード最大10個 · 完了して報酬を積み重ねます";
 extraWords.en.freeReadOnly =
-  "Free keeps the 3 most recently used active boards open. Extra boards stay safe and read-only.";
+  "Free keeps up to 5 active boards open. Extra boards stay safe and writable after Plus ends; only new board creation pauses until fewer than 5 remain.";
 extraWords.ko.freeReadOnly =
-  "무료 회원은 최근 사용한 활성 보드 3개를 계속 기록할 수 있어요. 나머지는 안전하게 읽기 전용으로 보관돼요.";
+  "무료 회원은 활성 보드를 최대 5개까지 이용해요. Plus 종료 후 초과한 기존 보드도 계속 기록할 수 있고, 5개 미만이 될 때까지 새 보드 생성만 멈춰요.";
 extraWords.zh.freeReadOnly =
-  "免费会员可继续记录最近使用的3个活动面板，其余面板安全保留为只读。";
+  "免费会员最多可使用5个活动面板。Plus结束后超出的现有面板仍可记录，仅暂停新建直到少于5个。";
 extraWords.ja.freeReadOnly =
-  "無料会員は最近使った3個の進行中ボードを記録でき、残りは安全な読み取り専用になります。";
+  "無料会員は進行中ボードを最大5個使えます。Plus終了後も既存の超過ボードは記録でき、5個未満になるまで新規作成だけ停止します。";
 const actionWords: Record<Locale, Record<string, string>> = {
   en: {
     completeBoard: "Complete board",
@@ -1003,7 +1019,7 @@ function App() {
       try {
         let data = await pixelLifeApi.bootstrap(locale);
         let account = data.member;
-        const guestActive = guest.filter((b) => !isFinished(b)).slice(0, 3);
+        const guestActive = guest.filter((b) => !isFinished(b)).slice(0, 5);
         const hasAccountBoards = data.boards.length > 0;
         const freeSlots = Math.max(
           0,
@@ -1298,7 +1314,7 @@ function App() {
       return;
     }
     const activeCount = boards.filter((b) => !isFinished(b)).length;
-    const boardLimit = member?.activeBoardLimit || 3;
+    const boardLimit = member?.activeBoardLimit || 5;
     if (activeCount >= boardLimit) {
       const plan = member
         ? member.effectivePlan
@@ -1360,7 +1376,7 @@ function App() {
         error.message.includes("active board")
       ) {
         const plan = member?.effectivePlan || "Guest";
-        setNotice(boardLimitWords[locale](plan, member?.activeBoardLimit || 3));
+        setNotice(boardLimitWords[locale](plan, member?.activeBoardLimit || 5));
       } else {
         showError(error, actionWords[locale].createError);
       }
@@ -1593,14 +1609,14 @@ function App() {
                 {active.length} {t.active}
               </span>
             </div>
-            {active.length > 4 && (
+            {active.length > 5 && (
               <button onClick={() => navigate("active-list", true)}>
                 {t.allActive} ({active.length}) →
               </button>
             )}
           </section>
           <section className="cards">
-            {active.slice(0, 4).map((b) => (
+            {active.slice(0, 5).map((b) => (
               <BoardCard
                 key={b.id}
                 board={b}
@@ -1858,6 +1874,73 @@ function App() {
                 </span>
               ))}
             </h1>
+            <fieldset className="template-picker">
+              <legend>
+                {{
+                  en: "Start with a template",
+                  ko: "기본 템플릿으로 시작",
+                  zh: "从模板开始",
+                  ja: "テンプレートから始める",
+                }[locale]}
+              </legend>
+              <p>
+                {{
+                  en: "Pick one to fill the name, record type, and goal length.",
+                  ko: "하나를 고르면 이름, 기록 방식과 목표 기간이 채워져요.",
+                  zh: "选择一个即可填入名称、记录方式和目标天数。",
+                  ja: "選ぶと名前・記録方法・目標期間が入力されます。",
+                }[locale]}
+              </p>
+              <div className="template-grid">
+                {boardTemplates.map((template) => {
+                  const templateTitle = template.title[locale];
+                  const selectedTemplate =
+                    title === templateTitle &&
+                    inputType === template.inputType &&
+                    goal === template.goalDays;
+                  return (
+                    <button
+                      type="button"
+                      key={`${template.inputType}-${template.title.en}`}
+                      className={selectedTemplate ? "selected" : ""}
+                      aria-pressed={selectedTemplate}
+                      onClick={() => {
+                        setTitle(templateTitle);
+                        setInputType(template.inputType);
+                        setGoal(template.goalDays);
+                      }}
+                    >
+                      <b>{template.icon}</b>
+                      <span>
+                        <strong>{templateTitle}</strong>
+                        <small>
+                          {template.inputType === "level"
+                            ? t.levelName
+                            : template.inputType === "mood"
+                              ? t.moodName
+                              : t.checkName}
+                          {" · "}
+                          {template.goalDays === null
+                            ? t.endless
+                            : `${template.goalDays} ${t.days}`}
+                        </small>
+                      </span>
+                      <i>{selectedTemplate ? "●" : "○"}</i>
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+            <div className="setup-divider" role="separator">
+              <span>
+                {{
+                  en: "Set it yourself",
+                  ko: "직접 설정하기",
+                  zh: "自行设置",
+                  ja: "自分で設定",
+                }[locale]}
+              </span>
+            </div>
             <label>
               <span>{t.name}</span>
               <input
@@ -2137,7 +2220,7 @@ function LegalPagePlan({
       termsText:
         "PixelLife is a personal tracking tool, not medical, financial, or professional advice.",
       policy:
-        "Free and Guest allow up to 3 active boards. Plus allows up to 10. Signed-in members can keep earning rewards without a total limit. After Plus ends, existing active boards remain usable; new creation waits until fewer than 3 remain.",
+        "Free and Guest allow up to 5 active boards. Plus allows up to 10. Signed-in members can keep earning rewards without a total limit. After Plus ends, existing active boards remain usable; new creation waits until fewer than 5 remain.",
     },
     ko: {
       home: "← 홈",
@@ -2152,7 +2235,7 @@ function LegalPagePlan({
       termsText:
         "PixelLife는 개인 기록 도구이며 의료·금융·전문적인 조언을 제공하지 않아요.",
       policy:
-        "비회원과 무료는 활성 보드 최대 3개, Plus는 최대 10개예요. 로그인 회원은 완료 보상과 등급·배지를 제한 없이 누적해요. Plus 종료 후 기존 활성 보드는 모두 이용하며, 활성 보드가 3개 미만이 될 때까지 새 보드 생성만 제한해요.",
+        "비회원과 무료는 활성 보드 최대 5개, Plus는 최대 10개예요. 로그인 회원은 완료 보상과 등급·배지를 제한 없이 누적해요. Plus 종료 후 기존 활성 보드는 모두 이용하며, 활성 보드가 5개 미만이 될 때까지 새 보드 생성만 제한해요.",
     },
     zh: {
       home: "← 首页",
@@ -2166,7 +2249,7 @@ function LegalPagePlan({
       ],
       termsText: "PixelLife是个人记录工具，不构成医疗、金融或专业建议。",
       policy:
-        "访客和免费最多3个活动面板，Plus最多10个。登录会员可无限累积奖励。Plus结束后现有面板仍可使用，少于3个前仅限制新建。",
+        "访客和免费最多5个活动面板，Plus最多10个。登录会员可无限累积奖励。Plus结束后现有面板仍可使用，少于5个前仅限制新建。",
     },
     ja: {
       home: "← ホーム",
@@ -2181,7 +2264,7 @@ function LegalPagePlan({
       termsText:
         "PixelLifeは個人記録ツールであり、医療・金融・専門的な助言ではありません。",
       policy:
-        "ゲストと無料は進行中最大3個、Plusは最大10個です。ログイン会員の報酬累積に上限はありません。Plus終了後も既存ボードは使え、3個未満になるまで新規作成だけ制限します。",
+        "ゲストと無料は進行中最大5個、Plusは最大10個です。ログイン会員の報酬累積に上限はありません。Plus終了後も既存ボードは使え、5個未満になるまで新規作成だけ制限します。",
     },
   }[locale];
   const title = base[kind];
@@ -2228,8 +2311,8 @@ function LegalPageSimple({
       terms: [
         "Terms",
         "PixelLife is a personal tracking tool, not medical, financial, or professional advice.",
-        "Guest, Free, and Plus use up to 3 active boards. Signed-in members can keep completing boards and earning rewards without a total limit.",
-        "Plus supports PixelLife. Ending Plus does not remove data or lock existing active boards. If more than 3 exist, only new board creation is paused.",
+        "Guest and Free use up to 5 active boards. Plus uses up to 10. Signed-in members can keep completing boards and earning rewards without a total limit.",
+        "Plus supports PixelLife. Ending Plus does not remove data or lock existing active boards. If 5 or more exist, only new board creation is paused.",
       ],
     },
     ko: {
@@ -2244,8 +2327,8 @@ function LegalPageSimple({
       terms: [
         "이용약관",
         "PixelLife는 개인 기록 도구이며 의료·금융·전문 조언이 아니에요.",
-        "비회원·무료·Plus 모두 활성 보드는 최대 3개예요. 로그인 회원은 보드 완료와 보상을 총량 제한 없이 계속 누적할 수 있어요.",
-        "Plus는 PixelLife 운영을 후원해요. Plus가 끝나도 데이터와 기존 활성 보드는 잠기지 않으며, 4개 이상이면 새 보드 생성만 잠시 멈춰요.",
+        "비회원·무료는 활성 보드 최대 5개, Plus는 최대 10개예요. 로그인 회원은 보드 완료와 보상을 총량 제한 없이 계속 누적할 수 있어요.",
+        "Plus는 PixelLife 운영을 후원해요. Plus가 끝나도 데이터와 기존 활성 보드는 잠기지 않으며, 5개 이상이면 새 보드 생성만 잠시 멈춰요.",
       ],
     },
     zh: {
@@ -2260,8 +2343,8 @@ function LegalPageSimple({
       terms: [
         "条款",
         "PixelLife是个人记录工具，不构成医疗、金融或专业建议。",
-        "访客、免费和Plus最多使用3个活动面板。登录会员可无限累积完成面板和奖励。",
-        "Plus用于支持PixelLife。Plus结束不会删除数据或锁定现有面板；超过3个时仅暂停新建。",
+        "访客和免费最多使用5个活动面板，Plus最多10个。登录会员可无限累积完成面板和奖励。",
+        "Plus用于支持PixelLife。Plus结束不会删除数据或锁定现有面板；达到或超过5个时仅暂停新建。",
       ],
     },
     ja: {
@@ -2276,8 +2359,8 @@ function LegalPageSimple({
       terms: [
         "利用規約",
         "PixelLifeは個人記録ツールで、医療・金融・専門的助言ではありません。",
-        "ゲスト・無料・Plusは進行中ボード最大3個です。ログイン会員は完了と報酬を制限なく積み重ねられます。",
-        "PlusはPixelLifeを支援します。終了してもデータや既存ボードはロックされず、4個以上なら新規作成だけ停止します。",
+        "ゲスト・無料は進行中ボード最大5個、Plusは最大10個です。ログイン会員は完了と報酬を制限なく積み重ねられます。",
+        "PlusはPixelLifeを支援します。終了してもデータや既存ボードはロックされず、5個以上なら新規作成だけ停止します。",
       ],
     },
   }[locale];
@@ -4697,12 +4780,12 @@ function MembershipGuidePlan({ locale }: { locale: Locale }) {
       free: "Free",
       plus: "Plus",
       guestItems: [
-        "Up to 3 active boards",
+        "Up to 5 active boards",
         "This browser only",
         "No member rewards",
       ],
       freeItems: [
-        "Up to 3 active boards",
+        "Up to 5 active boards",
         "Saved and synced",
         "Unlimited completed rewards",
       ],
@@ -4711,7 +4794,7 @@ function MembershipGuidePlan({ locale }: { locale: Locale }) {
         "Saved and synced",
         "Unlimited completed rewards",
       ],
-      rule: "After Plus ends, every existing active board stays usable. If 5 remain, you cannot add one. Complete boards until 2 remain, then add one up to the Free limit of 3.",
+      rule: "After Plus ends, every existing active board stays usable. If 5 or more remain, you cannot add one. Complete boards until 4 remain, then add one up to the Free limit of 5.",
     },
     ko: {
       eye: "회원 정책",
@@ -4720,12 +4803,12 @@ function MembershipGuidePlan({ locale }: { locale: Locale }) {
       free: "무료",
       plus: "Plus",
       guestItems: [
-        "활성 보드 최대 3개",
+        "활성 보드 최대 5개",
         "현재 브라우저만 저장",
         "회원 보상 없음",
       ],
       freeItems: [
-        "활성 보드 최대 3개",
+        "활성 보드 최대 5개",
         "계정 저장·동기화",
         "완료 보상 무제한 누적",
       ],
@@ -4734,7 +4817,7 @@ function MembershipGuidePlan({ locale }: { locale: Locale }) {
         "계정 저장·동기화",
         "완료 보상 무제한 누적",
       ],
-      rule: "Plus 종료 후에도 기존 활성 보드는 모두 이용해요. 3개 이상 남아 있으면 추가할 수 없고, 완료해서 2개가 되면 무료 한도 3개까지 1개를 추가할 수 있어요.",
+      rule: "Plus 종료 후에도 기존 활성 보드는 모두 이용해요. 5개 이상 남아 있으면 추가할 수 없고, 완료해서 4개가 되면 무료 한도 5개까지 1개를 추가할 수 있어요.",
     },
     zh: {
       eye: "会员规则",
@@ -4742,10 +4825,10 @@ function MembershipGuidePlan({ locale }: { locale: Locale }) {
       guest: "访客",
       free: "免费",
       plus: "Plus",
-      guestItems: ["最多3个活动面板", "仅当前浏览器", "无会员奖励"],
-      freeItems: ["最多3个活动面板", "账户保存同步", "完成奖励无限累积"],
+      guestItems: ["最多5个活动面板", "仅当前浏览器", "无会员奖励"],
+      freeItems: ["最多5个活动面板", "账户保存同步", "完成奖励无限累积"],
       plusItems: ["最多10个活动面板", "账户保存同步", "完成奖励无限累积"],
-      rule: "Plus结束后现有面板仍可使用。剩5个时不能新增，完成到2个后可新增1个，达到免费上限3个。",
+      rule: "Plus结束后现有面板仍可使用。剩5个或更多时不能新增，完成到4个后可新增1个，达到免费上限5个。",
     },
     ja: {
       eye: "会員ルール",
@@ -4753,10 +4836,10 @@ function MembershipGuidePlan({ locale }: { locale: Locale }) {
       guest: "ゲスト",
       free: "無料",
       plus: "Plus",
-      guestItems: ["進行中最大3個", "このブラウザのみ", "会員報酬なし"],
-      freeItems: ["進行中最大3個", "アカウント保存・同期", "完了報酬は無制限"],
+      guestItems: ["進行中最大5個", "このブラウザのみ", "会員報酬なし"],
+      freeItems: ["進行中最大5個", "アカウント保存・同期", "完了報酬は無制限"],
       plusItems: ["進行中最大10個", "アカウント保存・同期", "完了報酬は無制限"],
-      rule: "Plus終了後も既存ボードはすべて使えます。5個なら追加不可、完了して2個になれば無料上限3個まで1個追加できます。",
+      rule: "Plus終了後も既存ボードはすべて使えます。5個以上なら追加不可、完了して4個になれば無料上限5個まで1個追加できます。",
     },
   }[locale];
   const cards = [

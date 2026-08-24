@@ -46,17 +46,17 @@ class PixelLifeServiceTest {
     }
 
     @Test
-    void freeMemberCanKeepThreeActiveBoardsButNotFour() {
+    void freeMemberCanKeepFiveActiveBoardsButNotSix() {
         when(mapper.findBoardCreationContextForUpdate(1L)).thenReturn(
-            Map.of("plan", "FREE", "gradeCode", "SEED", "activeCount", 2),
-            Map.of("plan", "FREE", "gradeCode", "SEED", "activeCount", 3));
+            Map.of("plan", "FREE", "gradeCode", "SEED", "activeCount", 4),
+            Map.of("plan", "FREE", "gradeCode", "SEED", "activeCount", 5));
         when(mapper.findBoards(1L)).thenReturn(List.of());
 
-        service.createBoard(1L, "Third", "LEVEL", LocalDate.now(), 30);
+        service.createBoard(1L, "Fifth", "LEVEL", LocalDate.now(), 30);
 
-        assertThatThrownBy(() -> service.createBoard(1L, "Fourth", "LEVEL", LocalDate.now(), 30))
+        assertThatThrownBy(() -> service.createBoard(1L, "Sixth", "LEVEL", LocalDate.now(), 30))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Your plan allows 3 active boards");
+            .hasMessage("Your plan allows 5 active boards");
         verify(mapper, times(1)).insertBoard(any(BoardRow.class));
     }
 

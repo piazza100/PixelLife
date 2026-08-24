@@ -54,7 +54,7 @@ public class PixelLifeService {
     public Map<String,Object> member(long userId) {
         Map<String,Object> result = new HashMap<>(mapper.findMember(userId));
         result.put("effectivePlan", isPlus(result) ? "PLUS" : "FREE");
-        result.put("activeBoardLimit", isPlus(result) ? 10 : 3);
+        result.put("activeBoardLimit", isPlus(result) ? 10 : 5);
         return result;
     }
 
@@ -92,7 +92,7 @@ public class PixelLifeService {
         account.put("totalXp", first.get("totalXp"));
         account.put("gradeCode", first.get("gradeCode"));
         account.put("effectivePlan", isPlus(account) ? "PLUS" : "FREE");
-        account.put("activeBoardLimit", isPlus(account) ? 10 : 3);
+        account.put("activeBoardLimit", isPlus(account) ? 10 : 5);
 
         List<BoardRow> boards = rows.stream()
             .filter(row -> row.get("boardId") != null)
@@ -105,7 +105,7 @@ public class PixelLifeService {
     public BoardRow createBoard(long userId, String name, String type, LocalDate startDate, Integer goalDays) {
         Map<String,Object> account = mapper.findBoardCreationContextForUpdate(userId);
         if (account == null) throw new NoSuchElementException("Account not found");
-        int limit = isPlus(account) ? 10 : 3;
+        int limit = isPlus(account) ? 10 : 5;
         if (number(account.get("activeCount")) >= limit) throw new IllegalStateException("Your plan allows " + limit + " active board" + (limit == 1 ? "" : "s"));
         String boardType = switch (type == null ? "" : type.toUpperCase(Locale.ROOT)) {
             case "LEVEL", "CHECK", "MOOD" -> type.toUpperCase(Locale.ROOT);
@@ -305,7 +305,7 @@ public class PixelLifeService {
 
     private void requireWritable(long userId, long boardId) {
         // Existing active boards stay writable after a Plus subscription ends.
-        // The shared three-board limit is enforced only when a new board is created.
+        // The shared five-board limit is enforced only when a new board is created.
     }
 
     private BoardRow bootstrapBoard(Map<String,Object> row, long userId) {

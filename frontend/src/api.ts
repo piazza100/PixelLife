@@ -13,7 +13,7 @@ export type RewardColor = {code:string;cssColor:string;sortOrder:number}
 export type RewardGrade = {code:string;xp:number;species:number}
 export type RewardData = {totalXp:number;gradeCode:string;badges:RewardBadge[];plants:RewardPlant[];speciesPool:RewardSpecies[];unlockedColors:RewardColor[];gradeGuide:RewardGrade[]}
 
-export type Member = {id:number;email:string;displayName?:string|null;avatarUrl?:string|null;effectivePlan:'FREE'|'PLUS';activeBoardLimit:3|10;paidFrom?:string|null;paidUntil?:string|null;cancelAtPeriodEnd?:boolean|number}
+export type Member = {id:number;email:string;displayName?:string|null;avatarUrl?:string|null;effectivePlan:'FREE'|'PLUS';activeBoardLimit:5|10;paidFrom?:string|null;paidUntil?:string|null;cancelAtPeriodEnd?:boolean|number}
 export type TestUser = {id:number;email:string;displayName:string;plan:'FREE'|'PLUS';paidUntil:string|null;totalXp:number;gradeCode:string;createdAt:string}
 export type TestBoard = {id:number;name:string;type:'LEVEL'|'CHECK'|'MOOD';status:'ACTIVE'|'COMPLETED';startDate:string;endDate:string|null;goalDays:number|null;recordCount:number}
 

@@ -32,9 +32,11 @@ class DatabaseWorkflowIntegrationTest {
         BoardRow first = service.createBoard(userId, "Free one", "LEVEL", start, 3);
         service.createBoard(userId, "Free two", "CHECK", start, 3);
         service.createBoard(userId, "Free three", "MOOD", start, 3);
+        service.createBoard(userId, "Free four", "LEVEL", start, 3);
+        service.createBoard(userId, "Free five", "CHECK", start, 3);
 
-        assertThatThrownBy(() -> service.createBoard(userId, "Free four", "LEVEL", start, 3))
-            .isInstanceOf(IllegalStateException.class).hasMessageContaining("3 active boards");
+        assertThatThrownBy(() -> service.createBoard(userId, "Free six", "LEVEL", start, 3))
+            .isInstanceOf(IllegalStateException.class).hasMessageContaining("5 active boards");
 
         service.fillTestEntries(userId, first.getId(), start, LocalDate.now());
         Map<String, Object> completion = service.complete(userId, first.getId());
@@ -46,7 +48,7 @@ class DatabaseWorkflowIntegrationTest {
         assertThat(completedColor.get("code")).isEqualTo(first.getRewardColorCode());
         service.createBoard(userId, "Replacement", "LEVEL", start, 3);
 
-        assertThat(count("SELECT COUNT(*) FROM boards WHERE user_id=? AND status='ACTIVE'", userId)).isEqualTo(3);
+        assertThat(count("SELECT COUNT(*) FROM boards WHERE user_id=? AND status='ACTIVE'", userId)).isEqualTo(5);
         assertThat(count("SELECT COUNT(*) FROM boards WHERE user_id=? AND status='COMPLETED'", userId)).isEqualTo(1);
         assertThat(count("SELECT COUNT(*) FROM plants WHERE user_id=?", userId)).isEqualTo(1);
         assertThat(count("SELECT total_xp FROM users WHERE id=?", userId)).isEqualTo(3);
@@ -76,11 +78,11 @@ class DatabaseWorkflowIntegrationTest {
             }, userId);
         service.saveEntry(userId, boards.get(0).getId(), LocalDate.now(), 3, null, null, "still writable");
         assertThatThrownBy(() -> service.createBoard(userId, "Blocked after downgrade", "LEVEL", start, 3))
-            .isInstanceOf(IllegalStateException.class).hasMessageContaining("3 active boards");
+            .isInstanceOf(IllegalStateException.class).hasMessageContaining("5 active boards");
 
-        for (int i = 0; i < 8; i++) service.deleteBoard(userId, boards.get(i).getId());
+        for (int i = 0; i < 6; i++) service.deleteBoard(userId, boards.get(i).getId());
         service.createBoard(userId, "Free slot", "CHECK", start, 3);
-        assertThat(count("SELECT COUNT(*) FROM boards WHERE user_id=? AND status='ACTIVE'", userId)).isEqualTo(3);
+        assertThat(count("SELECT COUNT(*) FROM boards WHERE user_id=? AND status='ACTIVE'", userId)).isEqualTo(5);
     }
 
     @Test
