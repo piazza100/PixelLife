@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ApiError,
   authLinks,
@@ -63,11 +63,42 @@ type View =
   | "garden-list"
   | "conservatory-list"
   | "guide"
+  | "rewards-guide"
+  | "plans"
+  | "garden-guide"
+  | "board-creation-guide"
+  | "daily-record-guide"
+  | "stats-guide"
   | "rewards"
   | "account"
   | "privacy"
   | "terms"
   | "admin";
+
+const publicRoutes: Partial<Record<View, string>> = {
+  home: "/",
+  guide: "/guide",
+  "rewards-guide": "/rewards-guide",
+  plans: "/plans",
+  "garden-guide": "/garden",
+  "board-creation-guide": "/how-to-create-a-board",
+  "daily-record-guide": "/how-to-record",
+  "stats-guide": "/board-statistics",
+  privacy: "/privacy",
+  terms: "/terms",
+};
+const routeViews: Record<string, View> = Object.fromEntries(
+  Object.entries(publicRoutes).map(([view, path]) => [path, view]),
+) as Record<string, View>;
+const publicContentViews = new Set<View>([
+  "guide", "rewards-guide", "plans", "garden-guide", "board-creation-guide",
+  "daily-record-guide", "stats-guide", "privacy", "terms",
+]);
+const viewFromLocation = (): View => {
+  if (location.hash === "#test") return "admin";
+  const path = location.pathname.replace(/\/+$/, "") || "/";
+  return routeViews[path] || "home";
+};
 
 function BrandMark({ large = false }: { large?: boolean }) {
   return (
@@ -984,6 +1015,12 @@ function App() {
     ...screenWords[locale],
     rolling: progress,
   } as unknown as Record<string, string> & typeof words.en;
+  const publicNav = {
+    en: { create: "Create a board", record: "Daily records", stats: "Statistics", rewards: "Rewards", plans: "Plans", garden: "Garden" },
+    ko: { create: "보드 만들기", record: "매일 기록", stats: "통계", rewards: "보상", plans: "요금제", garden: "정원" },
+    zh: { create: "创建面板", record: "每日记录", stats: "统计", rewards: "奖励", plans: "方案", garden: "花园" },
+    ja: { create: "ボード作成", record: "毎日の記録", stats: "統計", rewards: "報酬", plans: "プラン", garden: "庭園" },
+  }[locale];
   const [member, setMember] = useState<Member | null | undefined>(undefined);
   const [rewards, setRewards] = useState<RewardData | null>(null);
   const [busy, setBusy] = useState(false);
@@ -991,16 +1028,46 @@ function App() {
   const [boards, setBoards] = useState<Board[]>(loadGuestBoards);
   const [selected, setSelected] = useState("");
   const detailReturnView = useRef<View>("home");
-  const [view, setView] = useState<View>(() =>
-    location.hash === "#test" ? "admin" : "home",
-  );
+  const [view, setView] = useState<View>(viewFromLocation);
   const viewScrollY = useRef<Partial<Record<View, number>>>({ home: 0 });
   const navigate = (next: View, reset = false) => {
     if (next === view) return;
     viewScrollY.current[view] = window.scrollY;
     if (reset) viewScrollY.current[next] = 0;
+    const nextPath = publicRoutes[next] || "/";
+    if (location.pathname !== nextPath || location.hash)
+      history.pushState({ pixelLifeView: next }, "", nextPath);
     setView(next);
   };
+  useEffect(() => {
+    const followUrl = () => setView(viewFromLocation());
+    addEventListener("popstate", followUrl);
+    return () => removeEventListener("popstate", followUrl);
+  }, []);
+  useEffect(() => {
+    const meta: Record<string, [string, string]> = {
+      home: ["PixelLife — Grow one pixel a day", "Track small daily progress with simple pixel boards."],
+      guide: ["How PixelLife works", "Learn how to create a board and record one small step each day."],
+      "rewards-guide": ["PixelLife rewards guide", "See how records become XP, grades, plants, and badge colors."],
+      plans: ["PixelLife plans", "Compare Guest, Free, and Plus board limits."],
+      "garden-guide": ["Pixel Garden guide", "See how active boards grow into collected plants."],
+      "board-creation-guide": ["How to create a PixelLife board", "Choose a goal, record type, and duration for a new daily board."],
+      "daily-record-guide": ["How to record each day in PixelLife", "Learn how daily pixels, notes, reset, and local dates work."],
+      "stats-guide": ["How to read PixelLife board statistics", "Understand record rate and the charts for Level, Yes/No, and Mood boards."],
+      privacy: ["Privacy — PixelLife", "Read how PixelLife handles account, board, reward, and billing data."],
+      terms: ["Terms — PixelLife", "Read the terms for using PixelLife."],
+    };
+    const [title, description] = meta[view] || meta.home;
+    document.title = title;
+    document.querySelector('meta[name="description"]')?.setAttribute("content", description);
+    let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    canonical.href = new URL(publicRoutes[view] || "/", location.origin).href;
+  }, [view]);
   useEffect(() => {
     const restore = () =>
       window.scrollTo({ top: viewScrollY.current[view] ?? 0 });
@@ -1514,14 +1581,14 @@ function App() {
           PixelLife
         </button>
         <div className="plan">
-          <nav className={`help-nav ${view === "guide" ? "guide-mode" : ""}`}>
+          <nav className={`help-nav ${publicContentViews.has(view) ? "guide-mode" : ""}`}>
             <button
-              className={view === "guide" ? "guide-close" : ""}
+              className={publicContentViews.has(view) ? "guide-close" : ""}
               onClick={() =>
-                view === "guide" ? navigate("home") : navigate("guide", true)
+                publicContentViews.has(view) ? navigate("home") : navigate("guide", true)
               }
             >
-              {view === "guide" ? t.home : t.guide}
+              {publicContentViews.has(view) ? t.home : t.guide}
             </button>
           </nav>
           {member ? (
@@ -1748,10 +1815,31 @@ function App() {
             showBack={view === "guide"}
           />
           <GuideSamples locale={locale} />
-          <GuideRewardCombined locale={locale} />
-          <MembershipGuidePlan locale={locale} />
-          <GuideGardenActual locale={locale} />
         </>
+      )}
+      {view === "rewards-guide" && (
+        <PublicContentPage locale={locale} onBack={() => navigate("home")}>
+          <GuideRewardCombined locale={locale} />
+        </PublicContentPage>
+      )}
+      {view === "plans" && (
+        <PublicContentPage locale={locale} onBack={() => navigate("home")}>
+          <MembershipGuidePlan locale={locale} />
+        </PublicContentPage>
+      )}
+      {view === "garden-guide" && (
+        <PublicContentPage locale={locale} onBack={() => navigate("home")}>
+          <GuideGardenActual locale={locale} />
+        </PublicContentPage>
+      )}
+      {view === "board-creation-guide" && (
+        <TopicGuidePage kind="create" locale={locale} onBack={() => navigate("home")} />
+      )}
+      {view === "daily-record-guide" && (
+        <TopicGuidePage kind="record" locale={locale} onBack={() => navigate("home")} />
+      )}
+      {view === "stats-guide" && (
+        <TopicGuidePage kind="stats" locale={locale} onBack={() => navigate("home")} />
       )}
       {view === "rewards" &&
         (member ? (
@@ -2071,12 +2159,127 @@ function App() {
         <span>Small days. Big life.</span>
         <nav>
           <a href="mailto:meet.wonderlife@gmail.com">{actionWords[locale].supportLabel}</a>
-          <button onClick={() => navigate("privacy", true)}>{t.privacy}</button>
-          <button onClick={() => navigate("terms", true)}>{t.terms}</button>
+          <a href="/guide" onClick={(event) => { event.preventDefault(); navigate("guide", true); }}>{t.guide}</a>
+          <a href="/how-to-create-a-board" onClick={(event) => { event.preventDefault(); navigate("board-creation-guide", true); }}>{publicNav.create}</a>
+          <a href="/how-to-record" onClick={(event) => { event.preventDefault(); navigate("daily-record-guide", true); }}>{publicNav.record}</a>
+          <a href="/board-statistics" onClick={(event) => { event.preventDefault(); navigate("stats-guide", true); }}>{publicNav.stats}</a>
+          <a href="/rewards-guide" onClick={(event) => { event.preventDefault(); navigate("rewards-guide", true); }}>{publicNav.rewards}</a>
+          <a href="/plans" onClick={(event) => { event.preventDefault(); navigate("plans", true); }}>{publicNav.plans}</a>
+          <a href="/garden" onClick={(event) => { event.preventDefault(); navigate("garden-guide", true); }}>{publicNav.garden}</a>
+          <a href="/privacy" onClick={(event) => { event.preventDefault(); navigate("privacy", true); }}>{t.privacy}</a>
+          <a href="/terms" onClick={(event) => { event.preventDefault(); navigate("terms", true); }}>{t.terms}</a>
         </nav>
       </footer>
       {busy && <div className="busy-bar" aria-hidden="true" />}
     </div>
+  );
+}
+
+function PublicContentPage({
+  locale,
+  onBack,
+  children,
+}: {
+  locale: Locale;
+  onBack: () => void;
+  children: ReactNode;
+}) {
+  const home = { en: "← Home", ko: "← 홈", zh: "← 首页", ja: "← ホーム" }[locale];
+  return (
+    <main className="guide-page public-content-page">
+      <button className="back" onClick={onBack}>{home}</button>
+      {children}
+    </main>
+  );
+}
+
+function TopicGuidePage({
+  kind,
+  locale,
+  onBack,
+}: {
+  kind: "create" | "record" | "stats";
+  locale: Locale;
+  onBack: () => void;
+}) {
+  const copy = {
+    en: {
+      home: "← Home",
+      create: {
+        eye: "BOARD SETUP",
+        title: "Make a board for one small goal.",
+        intro: "A PixelLife board keeps one goal, one record style, and one timeline together. Keeping the purpose small makes today’s choice clear.",
+        sections: [
+          ["1. Name the action", "Use a short name you can understand at a glance, such as Read today, Walk 5,000 steps, or How was my day? You can start from a template or write your own purpose."],
+          ["2. Pick one record type", "Level 1–5 shows intensity with five shades. Yes/No is a simple daily check. Mood stores one emoji for the day. The type stays consistent so the board pattern and statistics remain easy to read."],
+          ["3. Choose a useful duration", "Quick choices are 5, 10, and 30 days. Custom goals start at 3 days, and an open-ended board has no fixed finish date. A duration is a guide, not a judgment."],
+          ["What happens next", "The new board appears first on Home. Its color and future plant are assigned once and stay with that board. Guest boards remain only in this browser; signed-in boards are saved to the account."],
+        ],
+      },
+      record: {
+        eye: "DAILY RECORDS",
+        title: "Add one honest pixel for today.",
+        intro: "PixelLife focuses on today instead of asking you to repair every missed date. One small input is enough to keep the board useful.",
+        sections: [
+          ["Record in your local day", "The board uses the date and language of your browser. Signed-in saving sends your IANA time zone to the server, which verifies what today means in that location."],
+          ["Choose a value and optional note", "A Level board accepts 1–5, a Yes/No board accepts one answer, and a Mood board accepts one emoji. You may add a short note, but notes do not change XP."],
+          ["Reset today when needed", "Reset today removes only today’s saved input and returns that pixel to empty. Completed boards are read-only, so their records and notes can be viewed but not changed."],
+          ["Missed days stay neutral", "An empty past pixel means no record was saved. It is not shown as failure, and you do not need to backfill it. Start again with today. Future dates remain unavailable."],
+        ],
+      },
+      stats: {
+        eye: "BOARD STATISTICS",
+        title: "Read the pattern without judging the day.",
+        intro: "Stats summarize the records already on one board. They help you notice a pattern; they do not grade your effort or compare you with other people.",
+        sections: [
+          ["Record rate", "Record rate is the share of available goal days that contain a saved record. It is displayed as a percentage with a short plain-language summary. A missing day changes the rate but is not labeled as a failure."],
+          ["Level 1–5 distribution", "Level boards show how many times each of the five shades was selected. The chart answers whether your days were usually lighter, stronger, or mixed without turning low values into negative scores."],
+          ["Yes/No and Mood distribution", "Yes/No boards compare recorded Yes and No answers. Mood boards count each saved emoji. Only recorded days enter these distributions, so empty days are kept separate."],
+          ["Dates and completed boards", "Statistics use the board’s stored history, including records outside the latest calendar page. When a board is completed, its statistics remain available in read-only form with the calendar and notes."],
+        ],
+      },
+    },
+    ko: {
+      home: "← 홈",
+      create: { eye: "보드 설정", title: "작은 목표 하나로 보드를 만들어요.", intro: "PixelLife 보드는 하나의 목표, 기록 방식, 기간을 한곳에 모아요. 목적을 작게 잡으면 오늘 무엇을 기록할지 바로 알 수 있어요.", sections: [["1. 행동에 이름 붙이기", "오늘 독서, 5천 보 걷기, 오늘 하루는 어땠나요?처럼 한눈에 이해할 수 있는 짧은 이름을 써요. 템플릿으로 시작하거나 목적을 직접 입력할 수 있어요."], ["2. 기록 방식 하나 고르기", "1–5는 다섯 명도로 정도를 표시하고, 예/아니요는 간단히 체크하며, 기분은 이모지 하나를 저장해요. 같은 방식을 유지해 패턴과 통계를 쉽게 읽을 수 있어요."], ["3. 알맞은 기간 고르기", "5일, 10일, 30일을 빠르게 고르거나 3일 이상을 직접 입력할 수 있어요. 무기한 보드는 정해진 종료일이 없어요. 기간은 평가가 아니라 기록을 돕는 기준이에요."], ["다음에 일어나는 일", "새 보드는 홈의 맨 앞에 놓여요. 색상과 완성 시 받을 식물은 생성할 때 한 번 정해져요. 비회원 보드는 이 브라우저에만, 로그인 보드는 계정에 저장돼요."]] },
+      record: { eye: "매일 기록", title: "오늘을 솔직한 픽셀 하나로 남겨요.", intro: "PixelLife는 놓친 날짜를 억지로 채우기보다 오늘에 집중해요. 작은 입력 하나만으로도 보드는 충분히 의미가 있어요.", sections: [["사용자 현지 날짜로 기록", "화면은 브라우저의 날짜와 언어를 사용해요. 로그인 저장 시 IANA 시간대를 서버에 보내며, 서버가 그 지역의 오늘인지 검증해요."], ["값과 선택 메모 저장", "1–5 보드는 단계 하나, 예/아니요 보드는 답 하나, 기분 보드는 이모지 하나를 골라요. 짧은 메모를 더할 수 있지만 메모는 XP에 영향을 주지 않아요."], ["필요하면 오늘 초기화", "오늘 초기화는 오늘 저장값만 지우고 빈 픽셀로 돌려요. 완료 보드는 읽기 전용이라 기존 기록과 메모를 볼 수 있지만 바꿀 수 없어요."], ["놓친 날은 중립적으로 유지", "과거의 빈 픽셀은 저장된 기록이 없다는 뜻이에요. 실패로 표시하지 않고 과거 입력을 강요하지 않아요. 오늘부터 다시 시작하며 미래 날짜에는 기록할 수 없어요."]] },
+      stats: { eye: "보드 통계", title: "하루를 평가하지 않고 패턴을 읽어요.", intro: "통계는 한 보드에 이미 저장된 기록을 요약해요. 다른 사람과 비교하거나 노력을 채점하지 않고 내 패턴을 알아보는 데 사용해요.", sections: [["전체 기록률", "기록률은 기록 가능한 목표일 중 저장된 기록이 있는 날의 비율이에요. 퍼센트와 쉬운 요약 문장으로 보여주며, 빈 날을 실패라고 부르지 않아요."], ["1–5 단계 분포", "단계형 보드는 다섯 색상을 각각 몇 번 골랐는지 보여줘요. 낮은 값을 부정적인 점수로 바꾸지 않고 가벼운 날과 강한 날이 어떻게 섞였는지 확인할 수 있어요."], ["예/아니요와 기분 분포", "예/아니요 보드는 저장한 두 답의 횟수를 비교하고, 기분 보드는 이모지별 횟수를 보여줘요. 빈 날은 분포 계산에서 분리돼요."], ["전체 기간과 완료 보드", "통계는 최신 달력판 밖의 기록도 포함한 저장 이력을 사용해요. 보드를 완료한 후에도 달력과 메모, 통계를 읽기 전용으로 계속 볼 수 있어요."]] },
+    },
+    zh: {
+      home: "← 首页",
+      create: { eye: "创建面板", title: "为一个小目标创建面板。", intro: "PixelLife把一个目标、一种记录方式和一个时间范围放在一起。目标越清楚，今天的选择越简单。", sections: [["1. 写下行动", "使用一眼就能理解的短名称，也可以从模板开始。"], ["2. 选择记录类型", "1–5用五种深浅表示程度，是/否用于简单打卡，心情保存一个表情。固定类型让图案和统计更清楚。"], ["3. 选择期限", "可选5天、10天、30天，也可输入至少3天或使用无期限。期限用于帮助记录，不用于评价。"], ["创建之后", "新面板显示在首页最前面。颜色和植物只分配一次。访客数据仅保存在此浏览器，登录数据保存在账户中。"]] },
+      record: { eye: "每日记录", title: "为今天添加一个真实像素。", intro: "PixelLife专注今天，不要求补齐每个错过的日期。一次小输入就足够。", sections: [["按本地日期记录", "页面使用浏览器的日期和语言。登录保存时，服务器通过IANA时区验证当地的今天。"], ["保存数值和可选笔记", "根据面板选择一个等级、是或否、或一个心情表情。短笔记可选，也不会改变XP。"], ["需要时重置今天", "重置只删除今天的输入。已完成面板为只读，可查看但不可修改记录和笔记。"], ["错过的日期保持中立", "过去的空像素只表示没有记录，不表示失败。可以从今天重新开始，未来日期不可记录。"]] },
+      stats: { eye: "面板统计", title: "不评价一天，只阅读规律。", intro: "统计汇总一个面板已有的记录，用来发现自己的规律，而不是评分或与他人比较。", sections: [["记录率", "记录率是可记录目标日中已有记录的比例，以百分比和简短说明显示。"], ["1–5分布", "等级面板显示五种颜色各自被选择的次数，低数值不会被当作负面分数。"], ["是/否与心情分布", "是/否面板比较两种回答；心情面板统计每个表情。空白日期与分布分开。"], ["完整历史", "统计包含最新日历页之外的保存记录。完成后仍可只读查看日历、笔记和统计。"]] },
+    },
+    ja: {
+      home: "← ホーム",
+      create: { eye: "ボード作成", title: "小さな目標一つでボードを作ります。", intro: "PixelLifeは一つの目標、記録方法、期間をまとめます。目的を小さくすると今日の選択が明確になります。", sections: [["1. 行動に名前を付ける", "ひと目で分かる短い名前を書きます。テンプレートから始めることもできます。"], ["2. 記録タイプを選ぶ", "1〜5は五段階の濃さ、はい/いいえは簡単なチェック、気分は絵文字一つを保存します。"], ["3. 期間を選ぶ", "5日、10日、30日、3日以上のカスタム、または無期限を選べます。期間は評価ではなく記録の目安です。"], ["作成した後", "新しいボードはホームの先頭に表示され、色と植物は一度だけ決まります。ゲストはブラウザ、ログイン時はアカウントに保存されます。"]] },
+      record: { eye: "毎日の記録", title: "今日を正直なピクセル一つで残します。", intro: "PixelLifeは逃した日を埋めるより今日に集中します。小さな入力一つで十分です。", sections: [["現地の日付で記録", "画面はブラウザの日付と言語を使い、ログイン保存ではIANAタイムゾーンをサーバーが検証します。"], ["値と任意メモ", "タイプに合わせて段階、はい/いいえ、または絵文字を選びます。短いメモは任意でXPには影響しません。"], ["必要なら今日をリセット", "今日の入力だけを削除して空に戻します。完了ボードは読み取り専用です。"], ["未記録日は中立", "過去の空ピクセルは記録がないという意味だけです。失敗とは表示せず、今日から再開できます。未来日は入力できません。"]] },
+      stats: { eye: "ボード統計", title: "一日を評価せずパターンを読みます。", intro: "統計は一つのボードの保存記録を要約します。他人との比較や努力の採点には使いません。", sections: [["記録率", "記録できる目標日のうち保存済みの日が占める割合を％と短い説明で表示します。"], ["1〜5の分布", "五つの色を選んだ回数を表示します。低い値を否定的な点数にはしません。"], ["はい/いいえ・気分の分布", "二つの回答または各絵文字の回数を表示し、空白日は分布から分けます。"], ["全期間と完了後", "最新カレンダー外の履歴も集計し、完了後もカレンダー、メモ、統計を読み取り専用で確認できます。"]] },
+    },
+  }[locale];
+  const page = copy[kind];
+  return (
+    <main className="guide-page topic-guide-page">
+      <button className="back" onClick={onBack}>{copy.home}</button>
+      <article className="topic-guide-hero">
+        <p className="eyebrow">{page.eye}</p>
+        <h1>{page.title}</h1>
+        <p>{page.intro}</p>
+      </article>
+      <section className="topic-guide-sections">
+        {page.sections.map(([title, body]) => (
+          <article key={title}><h2>{title}</h2><p>{body}</p></article>
+        ))}
+      </section>
+      <nav className="topic-guide-nav" aria-label="PixelLife guides">
+        <a href="/guide">Guide</a>
+        <a href="/how-to-create-a-board">{copy.create.title}</a>
+        <a href="/how-to-record">{copy.record.title}</a>
+        <a href="/board-statistics">{copy.stats.title}</a>
+        <a href="/rewards-guide">Rewards</a>
+      </nav>
+    </main>
   );
 }
 
